@@ -5,34 +5,199 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GENwear Slang Dictionary</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #000; color: #fff; margin: 0; padding: 20px; }
-        h1 { text-align: center; background: linear-gradient(90deg, #ff0080, #7928ca); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .term { background: #111; margin: 15px 0; padding: 15px; border-radius: 8px; border-left: 4px solid #ff0080; }
-        .term-name { font-size: 1.3em; font-weight: bold; }
-        .definition { margin: 8px 0; color: #ccc; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #000; 
+            color: #fff; 
+            margin: 0; 
+            padding: 20px; 
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            border-bottom: 1px solid #333;
+        }
+        h1 { 
+            background: linear-gradient(90deg, #ff0080, #7928ca); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            font-size: 2.5em;
+            margin: 0;
+        }
+        .subtitle {
+            color: #999;
+            margin-top: 10px;
+            font-size: 1.1em;
+        }
+        .nav-link {
+            color: #ff0080;
+            text-decoration: none;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        .nav-link:hover {
+            color: #7928ca;
+        }
+        .term { 
+            background: #111; 
+            margin: 20px 0; 
+            padding: 20px; 
+            border-radius: 12px; 
+            border-left: 4px solid #ff0080;
+            transition: all 0.3s ease;
+        }
+        .term:hover {
+            background: #1a1a1a;
+            border-left-color: #7928ca;
+        }
+        .term-name { 
+            font-size: 1.5em; 
+            font-weight: bold; 
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .definition { 
+            margin: 8px 0; 
+            color: #ccc; 
+            font-size: 1.1em;
+            line-height: 1.4;
+        }
+        .category {
+            display: inline-block;
+            background: rgba(255, 0, 128, 0.2);
+            border: 1px solid #ff0080;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-top: 10px;
+            color: #ff80bf;
+        }
+        .fashion-category {
+            background: rgba(121, 40, 202, 0.2);
+            border-color: #7928ca;
+            color: #b794f6;
+        }
+        .search-box {
+            width: 100%;
+            padding: 15px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1em;
+            margin-bottom: 30px;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #ff0080;
+        }
+        .stats {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
-    <h1>GENwear Slang Dictionary</h1>
-    
-    <div class="term" id="drip">
-        <div class="term-name">DRIP</div>
-        <div class="definition">Stylish clothing or exceptional fashion sense</div>
+    <div class="header">
+        <h1>GENwear Slang Dictionary</h1>
+        <div class="subtitle">Understanding the language of style</div>
+        <a href="index.html" class="nav-link">← Back to GENwear</a>
+        <div class="stats">10 terms tracked across 3 platforms</div>
     </div>
+
+    <input type="text" class="search-box" placeholder="Search slang terms..." id="searchBox" onkeyup="searchTerms()">
     
-    <div class="term" id="fire">
-        <div class="term-name">FIRE</div>
-        <div class="definition">Amazing, excellent, very good</div>
+    <div id="termsContainer">
+        <div class="term" id="drip">
+            <div class="term-name">DRIP</div>
+            <div class="definition">Stylish clothing or exceptional fashion sense</div>
+            <div class="category fashion-category">Fashion</div>
+        </div>
+        
+        <div class="term" id="fire">
+            <div class="term-name">FIRE</div>
+            <div class="definition">Amazing, excellent, very good</div>
+            <div class="category fashion-category">Quality</div>
+        </div>
+        
+        <div class="term" id="slay">
+            <div class="term-name">SLAY</div>
+            <div class="definition">To do something really well, to excel or dominate</div>
+            <div class="category fashion-category">Attitude</div>
+        </div>
+        
+        <div class="term" id="bussin">
+            <div class="term-name">BUSSIN</div>
+            <div class="definition">Really good, excellent, or delicious (especially food)</div>
+            <div class="category">General</div>
+        </div>
+        
+        <div class="term" id="clean">
+            <div class="term-name">CLEAN</div>
+            <div class="definition">Well-dressed, stylish, or neat in appearance</div>
+            <div class="category fashion-category">Style</div>
+        </div>
+        
+        <div class="term" id="vibes">
+            <div class="term-name">VIBES</div>
+            <div class="definition">Mood, feeling, atmosphere, or energy</div>
+            <div class="category fashion-category">Mood</div>
+        </div>
+        
+        <div class="term" id="periodt">
+            <div class="term-name">PERIODT</div>
+            <div class="definition">Period - end of discussion, final statement (for emphasis)</div>
+            <div class="category">Attitude</div>
+        </div>
+        
+        <div class="term" id="rizz">
+            <div class="term-name">RIZZ</div>
+            <div class="definition">Charisma, especially in romantic situations</div>
+            <div class="category">Social</div>
+        </div>
+        
+        <div class="term" id="bet">
+            <div class="term-name">BET</div>
+            <div class="definition">Yes, okay, sounds good (expression of agreement)</div>
+            <div class="category">Agreement</div>
+        </div>
+        
+        <div class="term" id="nocap">
+            <div class="term-name">NO CAP</div>
+            <div class="definition">No lie, telling the truth (cap = lie)</div>
+            <div class="category">Truth</div>
+        </div>
     </div>
-    
-    <div class="term" id="slay">
-        <div class="term-name">SLAY</div>
-        <div class="definition">To do something really well, to excel</div>
+
+    <div style="text-align: center; margin: 40px 0; padding: 20px; border-top: 1px solid #333; color: #666;">
+        <p>Built with GENwear Slang Tracker</p>
+        <p style="font-size: 0.8em;">QR codes on our apparel link directly to these definitions</p>
     </div>
-    
-    <div class="term" id="bussin">
-        <div class="term-name">BUSSIN</div>
-        <div class="definition">Really good, excellent, or delicious</div>
-    </div>
+
+    <script>
+        function searchTerms() {
+            const searchBox = document.getElementById('searchBox');
+            const filter = searchBox.value.toUpperCase();
+            const container = document.getElementById('termsContainer');
+            const terms = container.getElementsByClassName('term');
+
+            for (let i = 0; i < terms.length; i++) {
+                const termName = terms[i].getElementsByClassName('term-name')[0];
+                const definition = terms[i].getElementsByClassName('definition')[0];
+                
+                if (termName.textContent.toUpperCase().indexOf(filter) > -1 ||
+                    definition.textContent.toUpperCase().indexOf(filter) > -1) {
+                    terms[i].style.display = '';
+                } else {
+                    terms[i].style.display = 'none';
+                }
+            }
+        }
+    </script>
 </body>
 </html>
