@@ -516,89 +516,143 @@
             </div>
 
             <div class="terms-grid" id="termsContainer">
-                <div class="term" data-generation="gen-z" data-category="fashion" data-trending="hot">
-                    <div class="term-header">
-                        <h3 class="term-name">DRIP</h3>
-                        <span class="trending-indicator trending-hot">HOT</span>
-                    </div>
-                    <div class="definition">Originally from hip-hop culture, "drip" describes someone's complete style presentation - their clothing, accessories, and the confidence to wear them well. When someone "has drip," their fashion sense is considered exceptional.</div>
-                    <div class="origin">Popularized in hip-hop, adopted by Gen Z and younger millennials</div>
-                    <div class="term-footer">
-                        <div class="term-tags">
-                            <span class="tag tag-generation">Gen Z</span>
-                            <span class="tag tag-category">Fashion</span>
-                        </div>
-                        <div class="usage-stats">
-                            <div class="stat">📈 +47%</div>
-                            <div class="stat">💬 134 mentions</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="term" data-generation="gen-alpha" data-category="social" data-trending="rising">
-                    <div class="term-header">
-                        <h3 class="term-name">RIZZ</h3>
-                        <span class="trending-indicator trending-rising">RISING</span>
-                    </div>
-                    <div class="definition">Short for "charisma." Refers to someone's charm and ability to attract others, especially in romantic contexts. Having "rizz" means you're smooth, confident, and good at conversation.</div>
-                    <div class="origin">Coined by Twitch streamer Kai Cenat, popularized by Gen Alpha</div>
-                    <div class="term-footer">
-                        <div class="term-tags">
-                            <span class="tag tag-generation">Gen Alpha</span>
-                            <span class="tag tag-category">Social</span>
-                        </div>
-                        <div class="usage-stats">
-                            <div class="stat">📈 +23%</div>
-                            <div class="stat">💬 89 mentions</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="term" data-generation="cross-gen" data-category="quality" data-trending="stable">
-                    <div class="term-header">
-                        <h3 class="term-name">FIRE</h3>
-                        <span class="trending-indicator trending-stable">STABLE</span>
-                    </div>
-                    <div class="definition">An expression of high praise meaning "excellent" or "amazing." Widely used by younger generations to describe anything impressive - music, clothing, food, or experiences.</div>
-                    <div class="origin">Originated in hip-hop, now mainstream across all young demographics</div>
-                    <div class="term-footer">
-                        <div class="term-tags">
-                            <span class="tag tag-generation">Cross-Gen</span>
-                            <span class="tag tag-category">Quality</span>
-                        </div>
-                        <div class="usage-stats">
-                            <div class="stat">📊 Stable</div>
-                            <div class="stat">💬 67 mentions</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="term" data-generation="gen-z" data-category="attitude" data-trending="hot">
-                    <div class="term-header">
-                        <h3 class="term-name">SLAY</h3>
-                        <span class="trending-indicator trending-hot">HOT</span>
-                    </div>
-                    <div class="definition">To excel at something with confidence and style. Originally from drag culture, now used broadly when someone performs exceptionally well, especially in fashion or self-presentation.</div>
-                    <div class="origin">Drag culture → mainstream youth culture via social media</div>
-                    <div class="term-footer">
-                        <div class="term-tags">
-                            <span class="tag tag-generation">Gen Z</span>
-                            <span class="tag tag-category">Attitude</span>
-                        </div>
-                        <div class="usage-stats">
-                            <div class="stat">📈 +18%</div>
-                            <div class="stat">💬 52 mentions</div>
-                        </div>
-                    </div>
+                <!-- Terms will be loaded dynamically from database -->
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <p>Loading terms from database...</p>
                 </div>
             </div>
         </main>
     </div>
 
     <script>
+        // Global variables
         let activeGeneration = 'all';
         let activeCategory = 'all';
         let currentSort = 'trending';
+        let allTermsData = [];
+        let generationStats = {};
+
+        // Fetch real data from your Flask API
+        async function loadRealData() {
+            try {
+                // Fetch stats for generation counts
+                const statsResponse = await fetch('http://localhost:5001/api/stats');
+                const stats = await statsResponse.json();
+                generationStats = stats.generationCounts;
+                
+                // Update generation counts in sidebar
+                updateGenerationCounts(stats);
+                
+                // Fetch all terms
+                const termsResponse = await fetch('http://localhost:5001/api/terms');
+                const termsData = await termsResponse.json();
+                allTermsData = termsData.terms;
+                
+                // Populate dictionary with real terms
+                populateTerms(allTermsData);
+                
+                // Update results count
+                updateResultCount();
+                
+                console.log(`Loaded ${allTermsData.length} terms from database`);
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                // Fallback to static data if API fails
+                console.log('Using static data as fallback');
+            }
+        }
+
+        function updateGenerationCounts(stats) {
+            const totalCount = stats.totalTerms || 0;
+            const counts = stats.generationCounts || {};
+            
+            // Update each generation count
+            document.querySelector('[onclick="toggleGeneration(\'all\')"] .gen-count').textContent = totalCount;
+            document.querySelector('[onclick="toggleGeneration(\'silent-gen\')"] .gen-count').textContent = counts['silent-gen'] || 0;
+            document.querySelector('[onclick="toggleGeneration(\'baby-boomers\')"] .gen-count').textContent = counts['baby-boomers'] || 0;
+            document.querySelector('[onclick="toggleGeneration(\'gen-x\')"] .gen-count').textContent = counts['gen-x'] || 0;
+            document.querySelector('[onclick="toggleGeneration(\'millennial\')"] .gen-count').textContent = counts['millennial'] || 0;
+            document.querySelector('[onclick="toggleGeneration(\'gen-z\')"] .gen-count').textContent = counts['gen-z'] || 0;
+            document.querySelector('[onclick="toggleGeneration(\'gen-alpha\')"] .gen-count').textContent = counts['gen-alpha'] || 0;
+            document.querySelector('[onclick="toggleGeneration(\'cross-gen\')"] .gen-count').textContent = counts['cross-gen'] || 0;
+        }
+
+        function populateTerms(terms) {
+            const container = document.getElementById('termsContainer');
+            container.innerHTML = ''; // Clear existing terms
+            
+            terms.forEach(term => {
+                const termElement = createTermElement(term);
+                container.appendChild(termElement);
+            });
+        }
+
+        function createTermElement(termData) {
+            const termDiv = document.createElement('div');
+            termDiv.className = 'term';
+            termDiv.setAttribute('data-generation', termData.generation);
+            termDiv.setAttribute('data-category', termData.category);
+            termDiv.setAttribute('data-trending', termData.trending_status);
+            
+            // Determine trending badge
+            let trendingBadge = '';
+            let trendingClass = 'trending-stable';
+            let trendingText = 'STABLE';
+            
+            if (termData.trending_status === 'hot') {
+                trendingClass = 'trending-hot';
+                trendingText = 'HOT';
+            } else if (termData.trending_status === 'rising') {
+                trendingClass = 'trending-rising';
+                trendingText = 'RISING';
+            }
+            
+            trendingBadge = `<span class="trending-indicator ${trendingClass}">${trendingText}</span>`;
+            
+            // Determine generation display name
+            const generationNames = {
+                'silent-gen': 'Silent Gen',
+                'baby-boomers': 'Baby Boomers',
+                'gen-x': 'Gen X',
+                'millennial': 'Millennial',
+                'gen-z': 'Gen Z',
+                'gen-alpha': 'Gen Alpha',
+                'cross-gen': 'Cross-Gen'
+            };
+            
+            const generationDisplay = generationNames[termData.generation] || 'Unknown';
+            
+            // Calculate trend percentage
+            const trendPercentage = termData.mentions_today > 0 ? 
+                Math.min(Math.round((termData.mentions_today / 10) * 100), 100) : 0;
+            
+            termDiv.innerHTML = `
+                <div class="term-header">
+                    <h3 class="term-name">${termData.term}</h3>
+                    ${trendingBadge}
+                </div>
+                <div class="definition">${termData.definition}</div>
+                <div class="origin">${termData.context}</div>
+                <div class="term-footer">
+                    <div class="term-tags">
+                        <span class="tag tag-generation">${generationDisplay}</span>
+                        <span class="tag tag-category">${termData.category.charAt(0).toUpperCase() + termData.category.slice(1)}</span>
+                    </div>
+                    <div class="usage-stats">
+                        <div class="stat">📈 +${trendPercentage}%</div>
+                        <div class="stat">💬 ${termData.mentions_today} mentions</div>
+                    </div>
+                </div>
+            `;
+            
+            return termDiv;
+        }
+
+        function updateResultCount() {
+            const visibleTerms = document.querySelectorAll('.term:not([style*="display: none"])').length;
+            document.getElementById('resultCount').textContent = visibleTerms;
+        }
 
         function toggleMobileFilters() {
             const sidebar = document.getElementById('sidebar');
@@ -636,37 +690,7 @@
             });
             event.currentTarget.classList.add('active');
             
-            const container = document.getElementById('termsContainer');
-            const terms = Array.from(container.querySelectorAll('.term:not([style*="display: none"])'));
-            
-            terms.sort((a, b) => {
-                switch(method) {
-                    case 'alphabetical':
-                        const nameA = a.querySelector('.term-name').textContent;
-                        const nameB = b.querySelector('.term-name').textContent;
-                        return nameA.localeCompare(nameB);
-                    
-                    case 'mentions':
-                        const mentionsA = parseInt(a.querySelector('.usage-stats .stat:last-child').textContent.match(/\d+/)[0] || 0);
-                        const mentionsB = parseInt(b.querySelector('.usage-stats .stat:last-child').textContent.match(/\d+/)[0] || 0);
-                        return mentionsB - mentionsA;
-                    
-                    case 'newest':
-                        // Could implement based on data attributes or database timestamps
-                        return 0;
-                    
-                    case 'trending':
-                    default:
-                        // Sort by trending status: hot > rising > stable
-                        const trendingOrder = { 'hot': 3, 'rising': 2, 'stable': 1 };
-                        const trendingA = a.getAttribute('data-trending') || 'stable';
-                        const trendingB = b.getAttribute('data-trending') || 'stable';
-                        return (trendingOrder[trendingB] || 1) - (trendingOrder[trendingA] || 1);
-                }
-            });
-            
-            // Re-append sorted terms
-            terms.forEach(term => container.appendChild(term));
+            sortVisibleTerms(method);
         }
 
         function filterTerms() {
@@ -709,15 +733,52 @@
             
             // Re-apply current sort to visible terms
             if (currentSort) {
-                const event = { currentTarget: document.querySelector('.sort-btn.active') };
-                if (event.currentTarget) {
-                    sortBy(currentSort);
+                const activeButton = document.querySelector('.sort-btn.active');
+                if (activeButton) {
+                    sortVisibleTerms(currentSort);
                 }
             }
         }
 
-        // Initialize
-        filterTerms();
+        function sortVisibleTerms(method) {
+            const container = document.getElementById('termsContainer');
+            const terms = Array.from(container.querySelectorAll('.term:not([style*="display: none"])'));
+            
+            terms.sort((a, b) => {
+                switch(method) {
+                    case 'alphabetical':
+                        const nameA = a.querySelector('.term-name').textContent;
+                        const nameB = b.querySelector('.term-name').textContent;
+                        return nameA.localeCompare(nameB);
+                    
+                    case 'mentions':
+                        const mentionsA = parseInt(a.querySelector('.usage-stats .stat:last-child').textContent.match(/\d+/)[0] || 0);
+                        const mentionsB = parseInt(b.querySelector('.usage-stats .stat:last-child').textContent.match(/\d+/)[0] || 0);
+                        return mentionsB - mentionsA;
+                    
+                    case 'newest':
+                        // Could implement based on data attributes or database timestamps
+                        return 0;
+                    
+                    case 'trending':
+                    default:
+                        // Sort by trending status: hot > rising > stable
+                        const trendingOrder = { 'hot': 3, 'rising': 2, 'stable': 1 };
+                        const trendingA = a.getAttribute('data-trending') || 'stable';
+                        const trendingB = b.getAttribute('data-trending') || 'stable';
+                        return (trendingOrder[trendingB] || 1) - (trendingOrder[trendingA] || 1);
+                }
+            });
+            
+            // Re-append sorted terms
+            terms.forEach(term => container.appendChild(term));
+        }
+
+        // Initialize page with real data
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Loading GENwear Dictionary with real data...');
+            loadRealData();
+        });
     </script>
 </body>
 </html>
