@@ -6,107 +6,417 @@
     <title>GENwear Slang Dictionary</title>
     <style>
         body { 
-            font-family: Arial, sans-serif; 
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
             background: #000; 
             color: #fff; 
             margin: 0; 
-            padding: 20px; 
-            max-width: 800px;
-            margin: 0 auto;
+            padding: 0;
+            min-height: 100vh;
         }
+        
         .header {
             text-align: center;
-            margin-bottom: 40px;
-            padding: 20px 0;
+            padding: 32px 20px;
             border-bottom: 1px solid #333;
+            background: linear-gradient(135deg, rgba(255,0,128,0.1), rgba(121,40,202,0.1));
         }
+        
         h1 { 
             background: linear-gradient(90deg, #ff0080, #7928ca); 
             -webkit-background-clip: text; 
             -webkit-text-fill-color: transparent; 
-            font-size: 2.5em;
-            margin: 0;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin: 0 0 12px 0;
         }
+        
         .subtitle {
             color: #999;
-            margin-top: 10px;
             font-size: 1.1em;
             line-height: 1.4;
+            max-width: 600px;
+            margin: 0 auto;
         }
+        
         .nav-link {
             color: #ff0080;
             text-decoration: none;
             margin-top: 15px;
             display: inline-block;
+            transition: color 0.2s;
         }
-        .nav-link:hover {
-            color: #7928ca;
+        .nav-link:hover { color: #7928ca; }
+        
+        .main-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 200px);
         }
-        .term { 
-            background: #111; 
-            margin: 20px 0; 
-            padding: 20px; 
-            border-radius: 12px; 
-            border-left: 4px solid #ff0080;
-            transition: all 0.3s ease;
+        
+        /* Left Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #0a0a0a;
+            border-right: 1px solid #333;
+            padding: 24px;
+            position: sticky;
+            top: 0;
+            height: fit-content;
+            max-height: 100vh;
+            overflow-y: auto;
         }
-        .term:hover {
-            background: #1a1a1a;
-            border-left-color: #7928ca;
+        
+        .search-section {
+            margin-bottom: 32px;
         }
-        .term-name { 
-            font-size: 1.5em; 
-            font-weight: bold; 
-            margin-bottom: 10px;
-            color: #fff;
-        }
-        .definition { 
-            margin: 8px 0; 
-            color: #ccc; 
-            font-size: 1.1em;
-            line-height: 1.4;
-        }
-        .origin {
-            margin: 8px 0;
-            color: #888;
-            font-size: 0.9em;
-            font-style: italic;
-        }
-        .category {
-            display: inline-block;
-            background: rgba(255, 0, 128, 0.2);
-            border: 1px solid #ff0080;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            margin-top: 10px;
-            color: #ff80bf;
-        }
-        .fashion-category {
-            background: rgba(121, 40, 202, 0.2);
-            border-color: #7928ca;
-            color: #b794f6;
-        }
+        
         .search-box {
             width: 100%;
-            padding: 15px;
+            padding: 12px 16px;
             background: #111;
             border: 1px solid #333;
             border-radius: 8px;
             color: #fff;
-            font-size: 1em;
-            margin-bottom: 30px;
+            font-size: 14px;
+            transition: border-color 0.2s;
         }
         .search-box:focus {
             outline: none;
             border-color: #ff0080;
         }
-        .culture-note {
-            text-align: center;
-            color: #666;
-            margin-bottom: 20px;
+        
+        .filter-section {
+            margin-bottom: 24px;
+        }
+        
+        .filter-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .generation-filter {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .gen-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .gen-option:hover {
+            background: #1a1a1a;
+            border-color: #333;
+        }
+        
+        .gen-option.active {
+            background: rgba(255, 0, 128, 0.1);
+            border-color: #ff0080;
+            color: #ff80bf;
+        }
+        
+        .gen-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #555;
+            border-radius: 3px;
+            margin-right: 10px;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .gen-option.active .gen-checkbox {
+            background: #ff0080;
+            border-color: #ff0080;
+        }
+        
+        .gen-option.active .gen-checkbox::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            font-size: 12px;
+            color: white;
+        }
+        
+        .gen-label {
+            font-size: 14px;
+            flex-grow: 1;
+        }
+        
+        .gen-count {
+            font-size: 12px;
+            color: #888;
+            background: #1a1a1a;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        .category-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .category-chip {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #333;
+            background: #111;
+        }
+        
+        .category-chip:hover {
+            border-color: #555;
+        }
+        
+        .category-chip.active {
+            background: rgba(121, 40, 202, 0.2);
+            border-color: #7928ca;
+            color: #b794f6;
+        }
+        
+        .stats-section {
+            background: #111;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+        
+        .stat-label { color: #aaa; }
+        .stat-value { color: #fff; font-weight: 600; }
+        
+        /* Main Content */
+        .content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .results-count {
+            color: #aaa;
+            font-size: 14px;
+        }
+        
+        .sort-options {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .sort-btn {
+            padding: 6px 12px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #aaa;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .sort-btn:hover, .sort-btn.active {
+            border-color: #ff0080;
+            color: #ff80bf;
+        }
+        
+        .terms-grid {
+            display: grid;
+            gap: 16px;
+        }
+        
+        .term { 
+            background: #0d0d0f; 
+            padding: 24px; 
+            border-radius: 12px; 
+            border: 1px solid #1e1e22;
+            border-left: 4px solid #ff0080;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .term:hover {
+            background: #1a1a1a;
+            border-left-color: #7928ca;
+            transform: translateY(-2px);
+        }
+        
+        .term-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .term-name { 
+            font-size: 1.4em; 
+            font-weight: bold; 
+            color: #fff;
+            margin: 0;
+        }
+        
+        .trending-indicator {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .trending-hot {
+            background: rgba(255, 0, 128, 0.2);
+            color: #ff0080;
+            border: 1px solid #ff0080;
+        }
+        
+        .trending-rising {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+            border: 1px solid #ffa500;
+        }
+        
+        .trending-stable {
+            background: rgba(34, 211, 238, 0.2);
+            color: #22d3ee;
+            border: 1px solid #22d3ee;
+        }
+        
+        .definition { 
+            color: #ccc; 
+            font-size: 1.1em;
+            line-height: 1.5;
+            margin: 12px 0;
+        }
+        
+        .origin {
+            color: #888;
             font-size: 0.9em;
             font-style: italic;
+            margin: 12px 0;
+        }
+        
+        .term-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #333;
+        }
+        
+        .term-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid;
+        }
+        
+        .tag-generation {
+            border-color: #ff0080;
+            color: #ff80bf;
+            background: rgba(255, 0, 128, 0.1);
+        }
+        
+        .tag-category {
+            border-color: #7928ca;
+            color: #b794f6;
+            background: rgba(121, 40, 202, 0.1);
+        }
+        
+        .usage-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .mobile-filters {
+            display: none;
+            background: #0a0a0a;
+            border-bottom: 1px solid #333;
+            padding: 16px;
+        }
+        
+        .mobile-filter-btn {
+            width: 100%;
+            padding: 12px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                display: none;
+                width: 100%;
+                position: static;
+                height: auto;
+                max-height: none;
+            }
+            
+            .sidebar.mobile-open {
+                display: block;
+            }
+            
+            .mobile-filters {
+                display: block;
+            }
+            
+            .content {
+                padding: 16px;
+            }
+            
+            .results-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
         }
     </style>
 </head>
@@ -114,111 +424,294 @@
     <div class="header">
         <h1>GENwear Slang Dictionary</h1>
         <div class="subtitle">
-            Understanding how younger generations communicate through fashion and style.<br>
-            A guide to the language shaping modern streetwear culture.
+            Understanding how each generation communicates through fashion and style.<br>
+            Real-time tracking of language evolution in streetwear culture.
         </div>
         <a href="index.html" class="nav-link">← Back to GENwear</a>
-        <div class="culture-note">Bridging generational language gaps through fashion</div>
     </div>
 
-    <input type="text" class="search-box" placeholder="Search slang terms..." id="searchBox" onkeyup="searchTerms()">
-    
-    <div id="termsContainer">
-        <div class="term" id="drip">
-            <div class="term-name">DRIP</div>
-            <div class="definition">Originally from hip-hop culture, "drip" describes someone's complete style presentation - their clothing, accessories, and the confidence to wear them well. When someone "has drip," their fashion sense is considered exceptional.</div>
-            <div class="origin">Popularized in hip-hop, adopted by Gen Z and younger millennials</div>
-            <div class="category fashion-category">Fashion</div>
-        </div>
-        
-        <div class="term" id="fire">
-            <div class="term-name">FIRE</div>
-            <div class="definition">An expression of high praise meaning "excellent" or "amazing." Widely used by younger generations to describe anything impressive - music, clothing, food, or experiences. Often accompanied by fire emoji.</div>
-            <div class="origin">Originated in hip-hop, now mainstream across all young demographics</div>
-            <div class="category fashion-category">Quality</div>
-        </div>
-        
-        <div class="term" id="slay">
-            <div class="term-name">SLAY</div>
-            <div class="definition">To excel at something with confidence and style. Originally from drag culture, now used broadly when someone performs exceptionally well, especially in fashion or self-presentation. "You're slaying in that outfit" means you look incredible.</div>
-            <div class="origin">Drag culture → mainstream youth culture via social media</div>
-            <div class="category fashion-category">Attitude</div>
-        </div>
-        
-        <div class="term" id="bussin">
-            <div class="term-name">BUSSIN</div>
-            <div class="definition">Originally used to describe food that tastes really good, now expanded to mean anything that's excellent or "hitting right." Popular among Gen Z and Gen Alpha, often used with enthusiasm about positive experiences.</div>
-            <div class="origin">African American Vernacular English (AAVE), spread via TikTok</div>
-            <div class="category">General</div>
-        </div>
-        
-        <div class="term" id="clean">
-            <div class="term-name">CLEAN</div>
-            <div class="definition">Describes a look that's perfectly coordinated and well-executed. A "clean fit" means an outfit where everything works together harmoniously - no clashing colors, good proportions, and attention to detail. Implies understated excellence.</div>
-            <div class="origin">Evolved from "clean cut" in fashion terminology</div>
-            <div class="category fashion-category">Style</div>
-        </div>
-        
-        <div class="term" id="vibes">
-            <div class="term-name">VIBES</div>
-            <div class="definition">The energy, mood, or feeling that something gives off. "Good vibes" means positive energy. Used to describe the atmosphere of places, the feeling of music, or the energy someone projects through their style and personality.</div>
-            <div class="origin">From "vibrations" in 1960s counterculture, modernized by millennials and Gen Z</div>
-            <div class="category fashion-category">Mood</div>
-        </div>
-        
-        <div class="term" id="periodt">
-            <div class="term-name">PERIODT</div>
-            <div class="definition">"Period" with a "T" added for emphasis. Used to end a statement that the speaker considers final and unquestionable. Equivalent to saying "end of discussion" or "that's facts." Often used to emphasize strong opinions about style or fashion choices.</div>
-            <div class="origin">AAVE, popularized through social media and drag culture</div>
-            <div class="category">Attitude</div>
-        </div>
-        
-        <div class="term" id="rizz">
-            <div class="term-name">RIZZ</div>
-            <div class="definition">Short for "charisma." Refers to someone's charm and ability to attract others, especially in romantic contexts. Having "rizz" means you're smooth, confident, and good at conversation. Often associated with having style and confidence.</div>
-            <div class="origin">Coined by Twitch streamer Kai Cenat, popularized by Gen Alpha</div>
-            <div class="category">Social</div>
-        </div>
-        
-        <div class="term" id="bet">
-            <div class="term-name">BET</div>
-            <div class="definition">An expression of agreement or confirmation, similar to saying "yes," "okay," or "sounds good." Can also express confidence, like "you can bet on it." Widely used across generations but particularly common in younger speech.</div>
-            <div class="origin">AAVE, adopted broadly across demographics since the 1990s</div>
-            <div class="category">Agreement</div>
-        </div>
-        
-        <div class="term" id="nocap">
-            <div class="term-name">NO CAP</div>
-            <div class="definition">"No lie" or "I'm telling the truth." "Cap" means lying or exaggerating, so "no cap" emphasizes honesty. Used when making a statement you want others to know is completely truthful, often about achievements or opinions.</div>
-            <div class="origin">Hip-hop culture, spread via social media platforms</div>
-            <div class="category">Truth</div>
-        </div>
+    <div class="mobile-filters">
+        <button class="mobile-filter-btn" onclick="toggleMobileFilters()">
+            Filters & Search
+        </button>
     </div>
 
-    <div style="text-align: center; margin: 40px 0; padding: 20px; border-top: 1px solid #333; color: #666;">
-        <p>Fashion speaks every language. Style crosses every generation.</p>
-        <p style="font-size: 0.8em;">Understanding the words helps you understand the culture behind the clothing.</p>
+    <div class="main-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="search-section">
+                <input type="text" class="search-box" placeholder="Search slang terms..." id="searchBox" onkeyup="filterTerms()">
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-title">Generation</div>
+                <div class="generation-filter">
+                    <div class="gen-option active" onclick="toggleGeneration('all')">
+                        <div class="gen-checkbox"></div>
+                        <span class="gen-label">All Generations</span>
+                        <span class="gen-count">23</span>
+                    </div>
+                    <div class="gen-option" onclick="toggleGeneration('gen-alpha')">
+                        <div class="gen-checkbox"></div>
+                        <span class="gen-label">Gen Alpha (2010+)</span>
+                        <span class="gen-count">8</span>
+                    </div>
+                    <div class="gen-option" onclick="toggleGeneration('gen-z')">
+                        <div class="gen-checkbox"></div>
+                        <span class="gen-label">Gen Z (1997-2012)</span>
+                        <span class="gen-count">12</span>
+                    </div>
+                    <div class="gen-option" onclick="toggleGeneration('millennial')">
+                        <div class="gen-checkbox"></div>
+                        <span class="gen-label">Millennial (1981-1996)</span>
+                        <span class="gen-count">7</span>
+                    </div>
+                    <div class="gen-option" onclick="toggleGeneration('cross-gen')">
+                        <div class="gen-checkbox"></div>
+                        <span class="gen-label">Cross-Generational</span>
+                        <span class="gen-count">4</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-title">Categories</div>
+                <div class="category-filters">
+                    <div class="category-chip active" onclick="toggleCategory('all')">All</div>
+                    <div class="category-chip" onclick="toggleCategory('fashion')">Fashion</div>
+                    <div class="category-chip" onclick="toggleCategory('attitude')">Attitude</div>
+                    <div class="category-chip" onclick="toggleCategory('quality')">Quality</div>
+                    <div class="category-chip" onclick="toggleCategory('social')">Social</div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-title">Trending Status</div>
+                <div class="category-filters">
+                    <div class="category-chip" onclick="toggleTrending('hot')">🔥 Hot</div>
+                    <div class="category-chip" onclick="toggleTrending('rising')">📈 Rising</div>
+                    <div class="category-chip" onclick="toggleTrending('stable')">📊 Stable</div>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="filter-title" style="margin-bottom: 12px;">Live Stats</div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Terms</span>
+                    <span class="stat-value">216</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Today's Mentions</span>
+                    <span class="stat-value">471</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Trending Now</span>
+                    <span class="stat-value">7</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Last Updated</span>
+                    <span class="stat-value">2m ago</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="content">
+            <div class="results-header">
+                <div class="results-count">
+                    Showing <span id="resultCount">10</span> of 23 terms
+                </div>
+                <div class="sort-options">
+                    <button class="sort-btn active" onclick="sortBy('trending')">Trending</button>
+                    <button class="sort-btn" onclick="sortBy('alphabetical')">A-Z</button>
+                    <button class="sort-btn" onclick="sortBy('newest')">Newest</button>
+                    <button class="sort-btn" onclick="sortBy('mentions')">Most Used</button>
+                </div>
+            </div>
+
+            <div class="terms-grid" id="termsContainer">
+                <div class="term" data-generation="gen-z" data-category="fashion" data-trending="hot">
+                    <div class="term-header">
+                        <h3 class="term-name">DRIP</h3>
+                        <span class="trending-indicator trending-hot">HOT</span>
+                    </div>
+                    <div class="definition">Originally from hip-hop culture, "drip" describes someone's complete style presentation - their clothing, accessories, and the confidence to wear them well. When someone "has drip," their fashion sense is considered exceptional.</div>
+                    <div class="origin">Popularized in hip-hop, adopted by Gen Z and younger millennials</div>
+                    <div class="term-footer">
+                        <div class="term-tags">
+                            <span class="tag tag-generation">Gen Z</span>
+                            <span class="tag tag-category">Fashion</span>
+                        </div>
+                        <div class="usage-stats">
+                            <div class="stat">📈 +47%</div>
+                            <div class="stat">💬 134 mentions</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="term" data-generation="gen-alpha" data-category="social" data-trending="rising">
+                    <div class="term-header">
+                        <h3 class="term-name">RIZZ</h3>
+                        <span class="trending-indicator trending-rising">RISING</span>
+                    </div>
+                    <div class="definition">Short for "charisma." Refers to someone's charm and ability to attract others, especially in romantic contexts. Having "rizz" means you're smooth, confident, and good at conversation.</div>
+                    <div class="origin">Coined by Twitch streamer Kai Cenat, popularized by Gen Alpha</div>
+                    <div class="term-footer">
+                        <div class="term-tags">
+                            <span class="tag tag-generation">Gen Alpha</span>
+                            <span class="tag tag-category">Social</span>
+                        </div>
+                        <div class="usage-stats">
+                            <div class="stat">📈 +23%</div>
+                            <div class="stat">💬 89 mentions</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="term" data-generation="cross-gen" data-category="quality" data-trending="stable">
+                    <div class="term-header">
+                        <h3 class="term-name">FIRE</h3>
+                        <span class="trending-indicator trending-stable">STABLE</span>
+                    </div>
+                    <div class="definition">An expression of high praise meaning "excellent" or "amazing." Widely used by younger generations to describe anything impressive - music, clothing, food, or experiences.</div>
+                    <div class="origin">Originated in hip-hop, now mainstream across all young demographics</div>
+                    <div class="term-footer">
+                        <div class="term-tags">
+                            <span class="tag tag-generation">Cross-Gen</span>
+                            <span class="tag tag-category">Quality</span>
+                        </div>
+                        <div class="usage-stats">
+                            <div class="stat">📊 Stable</div>
+                            <div class="stat">💬 67 mentions</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="term" data-generation="gen-z" data-category="attitude" data-trending="hot">
+                    <div class="term-header">
+                        <h3 class="term-name">SLAY</h3>
+                        <span class="trending-indicator trending-hot">HOT</span>
+                    </div>
+                    <div class="definition">To excel at something with confidence and style. Originally from drag culture, now used broadly when someone performs exceptionally well, especially in fashion or self-presentation.</div>
+                    <div class="origin">Drag culture → mainstream youth culture via social media</div>
+                    <div class="term-footer">
+                        <div class="term-tags">
+                            <span class="tag tag-generation">Gen Z</span>
+                            <span class="tag tag-category">Attitude</span>
+                        </div>
+                        <div class="usage-stats">
+                            <div class="stat">📈 +18%</div>
+                            <div class="stat">💬 52 mentions</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
-        function searchTerms() {
-            const searchBox = document.getElementById('searchBox');
-            const filter = searchBox.value.toUpperCase();
-            const container = document.getElementById('termsContainer');
-            const terms = container.getElementsByClassName('term');
+        let activeGeneration = 'all';
+        let activeCategory = 'all';
+        let activeTrending = null;
 
-            for (let i = 0; i < terms.length; i++) {
-                const termName = terms[i].getElementsByClassName('term-name')[0];
-                const definition = terms[i].getElementsByClassName('definition')[0];
-                
-                if (termName.textContent.toUpperCase().indexOf(filter) > -1 ||
-                    definition.textContent.toUpperCase().indexOf(filter) > -1) {
-                    terms[i].style.display = '';
-                } else {
-                    terms[i].style.display = 'none';
-                }
-            }
+        function toggleMobileFilters() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
         }
+
+        function toggleGeneration(gen) {
+            activeGeneration = gen;
+            
+            // Update visual state
+            document.querySelectorAll('.gen-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            event.currentTarget.classList.add('active');
+            filterTerms();
+        }
+
+        function toggleCategory(category) {
+            activeCategory = category;
+            
+            document.querySelectorAll('.category-chip').forEach(chip => {
+                chip.classList.remove('active');
+            });
+            
+            event.currentTarget.classList.add('active');
+            filterTerms();
+        }
+
+        function toggleTrending(trending) {
+            if (activeTrending === trending) {
+                activeTrending = null;
+                event.currentTarget.classList.remove('active');
+            } else {
+                document.querySelectorAll('.category-filters .category-chip').forEach(chip => {
+                    if (chip.textContent.includes('🔥') || chip.textContent.includes('📈') || chip.textContent.includes('📊')) {
+                        chip.classList.remove('active');
+                    }
+                });
+                activeTrending = trending;
+                event.currentTarget.classList.add('active');
+            }
+            filterTerms();
+        }
+
+        function sortBy(method) {
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Add sorting logic here
+        }
+
+        function filterTerms() {
+            const searchTerm = document.getElementById('searchBox').value.toUpperCase();
+            const terms = document.querySelectorAll('.term');
+            let visibleCount = 0;
+
+            terms.forEach(term => {
+                const termName = term.querySelector('.term-name').textContent.toUpperCase();
+                const definition = term.querySelector('.definition').textContent.toUpperCase();
+                const generation = term.getAttribute('data-generation');
+                const category = term.getAttribute('data-category');
+                const trending = term.getAttribute('data-trending');
+
+                let shouldShow = true;
+
+                // Search filter
+                if (searchTerm && !termName.includes(searchTerm) && !definition.includes(searchTerm)) {
+                    shouldShow = false;
+                }
+
+                // Generation filter
+                if (activeGeneration !== 'all' && generation !== activeGeneration) {
+                    shouldShow = false;
+                }
+
+                // Category filter
+                if (activeCategory !== 'all' && category !== activeCategory) {
+                    shouldShow = false;
+                }
+
+                // Trending filter
+                if (activeTrending && trending !== activeTrending) {
+                    shouldShow = false;
+                }
+
+                if (shouldShow) {
+                    term.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    term.style.display = 'none';
+                }
+            });
+
+            document.getElementById('resultCount').textContent = visibleCount;
+        }
+
+        // Initialize
+        filterTerms();
     </script>
 </body>
 </html>
