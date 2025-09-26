@@ -484,14 +484,7 @@
                 </div>
             </div>
 
-            <div class="filter-section">
-                <div class="filter-title">Trending Status</div>
-                <div class="category-filters">
-                    <div class="category-chip" onclick="toggleTrending('hot')">🔥 Hot</div>
-                    <div class="category-chip" onclick="toggleTrending('rising')">📈 Rising</div>
-                    <div class="category-chip" onclick="toggleTrending('stable')">📊 Stable</div>
-                </div>
-            </div>
+
 
             <div class="stats-section">
                 <div class="filter-title" style="margin-bottom: 12px;">Live Stats</div>
@@ -610,7 +603,7 @@
     <script>
         let activeGeneration = 'all';
         let activeCategory = 'all';
-        let activeTrending = null;
+        let currentSort = 'trending';
 
         function toggleMobileFilters() {
             const sidebar = document.getElementById('sidebar');
@@ -640,29 +633,45 @@
             filterTerms();
         }
 
-        function toggleTrending(trending) {
-            if (activeTrending === trending) {
-                activeTrending = null;
-                event.currentTarget.classList.remove('active');
-            } else {
-                document.querySelectorAll('.category-filters .category-chip').forEach(chip => {
-                    if (chip.textContent.includes('🔥') || chip.textContent.includes('📈') || chip.textContent.includes('📊')) {
-                        chip.classList.remove('active');
-                    }
-                });
-                activeTrending = trending;
-                event.currentTarget.classList.add('active');
-            }
-            filterTerms();
-        }
-
         function sortBy(method) {
+            currentSort = method;
+            
             document.querySelectorAll('.sort-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.currentTarget.classList.add('active');
             
-            // Add sorting logic here
+            const container = document.getElementById('termsContainer');
+            const terms = Array.from(container.querySelectorAll('.term:not([style*="display: none"])'));
+            
+            terms.sort((a, b) => {
+                switch(method) {
+                    case 'alphabetical':
+                        const nameA = a.querySelector('.term-name').textContent;
+                        const nameB = b.querySelector('.term-name').textContent;
+                        return nameA.localeCompare(nameB);
+                    
+                    case 'mentions':
+                        const mentionsA = parseInt(a.querySelector('.usage-stats .stat:last-child').textContent.match(/\d+/)[0] || 0);
+                        const mentionsB = parseInt(b.querySelector('.usage-stats .stat:last-child').textContent.match(/\d+/)[0] || 0);
+                        return mentionsB - mentionsA;
+                    
+                    case 'newest':
+                        // Could implement based on data attributes or database timestamps
+                        return 0;
+                    
+                    case 'trending':
+                    default:
+                        // Sort by trending status: hot > rising > stable
+                        const trendingOrder = { 'hot': 3, 'rising': 2, 'stable': 1 };
+                        const trendingA = a.getAttribute('data-trending') || 'stable';
+                        const trendingB = b.getAttribute('data-trending') || 'stable';
+                        return (trendingOrder[trendingB] || 1) - (trendingOrder[trendingA] || 1);
+                }
+            });
+            
+            // Re-append sorted terms
+            terms.forEach(term => container.appendChild(term));
         }
 
         function filterTerms() {
@@ -675,7 +684,6 @@
                 const definition = term.querySelector('.definition').textContent.toUpperCase();
                 const generation = term.getAttribute('data-generation');
                 const category = term.getAttribute('data-category');
-                const trending = term.getAttribute('data-trending');
 
                 let shouldShow = true;
 
@@ -694,11 +702,6 @@
                     shouldShow = false;
                 }
 
-                // Trending filter
-                if (activeTrending && trending !== activeTrending) {
-                    shouldShow = false;
-                }
-
                 if (shouldShow) {
                     term.style.display = 'block';
                     visibleCount++;
@@ -708,6 +711,14 @@
             });
 
             document.getElementById('resultCount').textContent = visibleCount;
+            
+            // Re-apply current sort to visible terms
+            if (currentSort) {
+                const event = { currentTarget: document.querySelector('.sort-btn.active') };
+                if (event.currentTarget) {
+                    sortBy(currentSort);
+                }
+            }
         }
 
         // Initialize
