@@ -344,23 +344,6 @@
             font-style: italic;
         }
         
-        .research-btn {
-            background: var(--accent-primary);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: var(--radius);
-            font-size: 12px;
-            cursor: pointer;
-            margin-left: 8px;
-            transition: all 0.2s;
-        }
-        
-        .research-btn:hover {
-            background: var(--accent-secondary);
-            transform: scale(1.05);
-        }
-        
         .term-footer {
             display: flex;
             justify-content: space-between;
@@ -752,17 +735,12 @@
             
             const generationDisplay = generationNames[termData.generation] || 'Unknown';
             
-            // Definition handling
+            // Definition handling - NO RESEARCH BUTTONS FOR PUBLIC
             let definitionHTML = '';
             if (!termData.definition || 
                 termData.definition === 'No definition available' ||
                 termData.definition === 'Approved slang term') {
-                definitionHTML = `
-                    <em>Definition not available</em>
-                    <button class="research-btn" onclick="researchTerm('${termData.term}')">
-                        Research Now
-                    </button>
-                `;
+                definitionHTML = '<em>Definition pending review</em>';
             } else {
                 definitionHTML = termData.definition;
             }
@@ -782,29 +760,6 @@
             `;
             
             return termDiv;
-        }
-
-        // Research functionality
-        async function researchTerm(term) {
-            try {
-                const response = await fetch(`${API_BASE}/research`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ term: term })
-                });
-
-                if (response.ok) {
-                    console.log(`Researching term: ${term}`);
-                    // Reload data to show updated definition
-                    setTimeout(() => loadDictionaryData(), 2000);
-                } else {
-                    console.error('Research request failed');
-                }
-            } catch (error) {
-                console.error('Error researching term:', error);
-            }
         }
 
         // Filter and sort functions
