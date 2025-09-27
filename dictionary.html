@@ -5,46 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GENwear Slang Dictionary</title>
     <style>
+        :root {
+            --bg: #000;
+            --surface: #0d0d0f;
+            --surface-hover: #1a1a1a;
+            --text: #eaeaea;
+            --text-muted: #999;
+            --text-subtle: #666;
+            --accent-primary: #ff0080;
+            --accent-secondary: #7928ca;
+            --accent-tertiary: #22d3ee;
+            --border: #333;
+            --border-light: #1e1e22;
+            --radius: 8px;
+            --radius-large: 12px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
         body { 
             font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-            background: #000; 
-            color: #fff; 
-            margin: 0; 
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
             padding: 0;
             min-height: 100vh;
+            line-height: 1.6;
         }
         
         .header {
             text-align: center;
-            padding: 32px 20px;
-            border-bottom: 1px solid #333;
-            background: linear-gradient(135deg, rgba(255,0,128,0.1), rgba(121,40,202,0.1));
+            padding: 40px 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(255,0,128,0.05), rgba(121,40,202,0.05));
         }
         
         h1 { 
-            background: linear-gradient(90deg, #ff0080, #7928ca); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             font-size: clamp(1.8rem, 4vw, 2.5rem);
             margin: 0 0 12px 0;
+            font-weight: 800;
         }
         
         .subtitle {
-            color: #999;
+            color: var(--text-muted);
             font-size: 1.1em;
-            line-height: 1.4;
             max-width: 600px;
-            margin: 0 auto;
+            margin: 0 auto 20px;
         }
         
         .nav-link {
-            color: #ff0080;
+            color: var(--accent-primary);
             text-decoration: none;
-            margin-top: 15px;
-            display: inline-block;
             transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .nav-link:hover { color: #7928ca; }
+        .nav-link:hover { 
+            color: var(--accent-secondary);
+        }
         
         .main-container {
             display: flex;
@@ -53,15 +78,17 @@
             min-height: calc(100vh - 200px);
         }
         
-        /* Left Sidebar */
+        /* Sidebar */
         .sidebar {
-            width: 280px;
-            background: #0a0a0a;
-            border-right: 1px solid #333;
+            width: 300px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
             padding: 24px;
             position: sticky;
             top: 0;
             height: fit-content;
+            max-height: 100vh;
+            overflow-y: auto;
         }
         
         .search-section {
@@ -70,28 +97,31 @@
         
         .search-box {
             width: 100%;
-            padding: 12px 16px;
+            padding: 14px 16px;
             background: #111;
-            border: 1px solid #333;
-            border-radius: 8px;
-            color: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
             font-size: 14px;
             transition: border-color 0.2s;
         }
         .search-box:focus {
             outline: none;
-            border-color: #ff0080;
+            border-color: var(--accent-primary);
+        }
+        .search-box::placeholder {
+            color: var(--text-subtle);
         }
         
         .filter-section {
-            margin-bottom: 24px;
+            margin-bottom: 32px;
         }
         
         .filter-title {
             font-size: 14px;
             font-weight: 600;
-            color: #fff;
-            margin-bottom: 12px;
+            color: var(--text);
+            margin-bottom: 16px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -105,37 +135,37 @@
         .gen-option {
             display: flex;
             align-items: center;
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: var(--radius);
             cursor: pointer;
             transition: all 0.2s;
             border: 1px solid transparent;
         }
         
         .gen-option:hover {
-            background: #1a1a1a;
-            border-color: #333;
+            background: var(--surface-hover);
+            border-color: var(--border);
         }
         
         .gen-option.active {
             background: rgba(255, 0, 128, 0.1);
-            border-color: #ff0080;
+            border-color: var(--accent-primary);
             color: #ff80bf;
         }
         
         .gen-checkbox {
             width: 16px;
             height: 16px;
-            border: 2px solid #555;
+            border: 2px solid var(--border);
             border-radius: 3px;
-            margin-right: 10px;
+            margin-right: 12px;
             position: relative;
             transition: all 0.2s;
         }
         
         .gen-option.active .gen-checkbox {
-            background: #ff0080;
-            border-color: #ff0080;
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
         }
         
         .gen-option.active .gen-checkbox::after {
@@ -145,6 +175,7 @@
             left: 2px;
             font-size: 12px;
             color: white;
+            font-weight: bold;
         }
         
         .gen-label {
@@ -154,54 +185,40 @@
         
         .gen-count {
             font-size: 12px;
-            color: #888;
+            color: var(--text-muted);
             background: #1a1a1a;
-            padding: 2px 6px;
-            border-radius: 10px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            min-width: 24px;
+            text-align: center;
         }
         
         .category-filters {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 8px;
         }
         
         .category-chip {
-            padding: 4px 10px;
-            border-radius: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 12px;
             cursor: pointer;
             transition: all 0.2s;
-            border: 1px solid #333;
+            border: 1px solid var(--border);
             background: #111;
+            font-weight: 500;
         }
         
         .category-chip:hover {
-            border-color: #555;
+            border-color: var(--text-muted);
         }
         
         .category-chip.active {
             background: rgba(121, 40, 202, 0.2);
-            border-color: #7928ca;
+            border-color: var(--accent-secondary);
             color: #b794f6;
         }
-        
-        .stats-section {
-            background: #111;
-            padding: 16px;
-            border-radius: 8px;
-            border: 1px solid #333;
-        }
-        
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin: 8px 0;
-            font-size: 13px;
-        }
-        
-        .stat-label { color: #aaa; }
-        .stat-value { color: #fff; font-weight: 600; }
         
         /* Main Content */
         .content {
@@ -216,11 +233,11 @@
             align-items: center;
             margin-bottom: 24px;
             padding-bottom: 16px;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid var(--border);
         }
         
         .results-count {
-            color: #aaa;
+            color: var(--text-muted);
             font-size: 14px;
         }
         
@@ -230,19 +247,26 @@
         }
         
         .sort-btn {
-            padding: 6px 12px;
+            padding: 8px 14px;
             background: #111;
-            border: 1px solid #333;
-            border-radius: 6px;
-            color: #aaa;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-muted);
             font-size: 12px;
             cursor: pointer;
             transition: all 0.2s;
+            font-weight: 500;
         }
         
-        .sort-btn:hover, .sort-btn.active {
-            border-color: #ff0080;
+        .sort-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--text);
+        }
+        
+        .sort-btn.active {
+            border-color: var(--accent-primary);
             color: #ff80bf;
+            background: rgba(255, 0, 128, 0.1);
         }
         
         .terms-grid {
@@ -251,47 +275,49 @@
         }
         
         .term { 
-            background: #0d0d0f; 
-            padding: 24px; 
-            border-radius: 12px; 
-            border: 1px solid #1e1e22;
-            border-left: 4px solid #ff0080;
-            transition: all 0.3s ease;
+            background: var(--surface);
+            padding: 24px;
+            border-radius: var(--radius-large);
+            border: 1px solid var(--border-light);
+            border-left: 4px solid var(--accent-primary);
+            transition: all 0.2s ease;
             position: relative;
         }
         
         .term:hover {
-            background: #1a1a1a;
-            border-left-color: #7928ca;
-            transform: translateY(-2px);
+            background: var(--surface-hover);
+            border-left-color: var(--accent-secondary);
+            transform: translateY(-1px);
         }
         
         .term-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
         
         .term-name { 
-            font-size: 1.4em; 
-            font-weight: bold; 
-            color: #fff;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--text);
             margin: 0;
+            letter-spacing: 0.5px;
         }
         
         .trending-indicator {
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 20px;
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .trending-hot {
             background: rgba(255, 0, 128, 0.2);
-            color: #ff0080;
-            border: 1px solid #ff0080;
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
         }
         
         .trending-rising {
@@ -302,31 +328,46 @@
         
         .trending-stable {
             background: rgba(34, 211, 238, 0.2);
-            color: #22d3ee;
-            border: 1px solid #22d3ee;
+            color: var(--accent-tertiary);
+            border: 1px solid var(--accent-tertiary);
         }
         
         .definition { 
-            color: #ccc; 
+            color: #ccc;
             font-size: 1.1em;
-            line-height: 1.5;
-            margin: 12px 0;
+            line-height: 1.6;
+            margin: 16px 0;
         }
         
-        .origin {
-            color: #888;
-            font-size: 0.9em;
+        .definition em {
+            color: var(--text-muted);
             font-style: italic;
-            margin: 12px 0;
+        }
+        
+        .research-btn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: var(--radius);
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: all 0.2s;
+        }
+        
+        .research-btn:hover {
+            background: var(--accent-secondary);
+            transform: scale(1.05);
         }
         
         .term-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 16px;
+            margin-top: 20px;
             padding-top: 16px;
-            border-top: 1px solid #333;
+            border-top: 1px solid var(--border);
         }
         
         .term-tags {
@@ -336,41 +377,72 @@
         }
         
         .tag {
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 12px;
             border: 1px solid;
+            font-weight: 500;
         }
         
         .tag-generation {
-            border-color: #ff0080;
+            border-color: var(--accent-primary);
             color: #ff80bf;
             background: rgba(255, 0, 128, 0.1);
         }
         
         .tag-category {
-            border-color: #7928ca;
+            border-color: var(--accent-secondary);
             color: #b794f6;
             background: rgba(121, 40, 202, 0.1);
         }
         
-        .usage-stats {
-            display: flex;
-            gap: 12px;
-            font-size: 12px;
-            color: #888;
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
         }
         
-        .stat {
-            display: flex;
-            align-items: center;
-            gap: 4px;
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
         }
         
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        
+        .retry-btn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            margin-top: 16px;
+            transition: all 0.2s;
+        }
+        
+        .retry-btn:hover {
+            background: var(--accent-secondary);
+        }
+        
+        /* Mobile Styles */
         .mobile-filters {
             display: none;
-            background: #0a0a0a;
-            border-bottom: 1px solid #333;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
             padding: 16px;
         }
         
@@ -378,13 +450,17 @@
             width: 100%;
             padding: 12px;
             background: #111;
-            border: 1px solid #333;
-            border-radius: 6px;
-            color: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
             cursor: pointer;
+            transition: all 0.2s;
         }
         
-        /* Responsive */
+        .mobile-filter-btn:hover {
+            border-color: var(--accent-primary);
+        }
+        
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -412,8 +488,20 @@
             
             .results-header {
                 flex-direction: column;
-                gap: 12px;
+                gap: 16px;
                 align-items: stretch;
+            }
+            
+            .sort-options {
+                justify-content: center;
+            }
+            
+            .term {
+                padding: 20px;
+            }
+            
+            .term-name {
+                font-size: 1.3em;
             }
         }
     </style>
@@ -422,10 +510,12 @@
     <div class="header">
         <h1>GENwear Slang Dictionary</h1>
         <div class="subtitle">
-            Understanding how each generation communicates through fashion and style.<br>
-            Real-time tracking of language evolution in streetwear culture.
+            Understanding how each generation communicates through fashion and culture.<br>
+            Real-time tracking of language evolution in streetwear.
         </div>
-        <a href="index.html" class="nav-link">← Back to GENwear</a>
+        <a href="index.html" class="nav-link">
+            <span>←</span> Back to GENwear
+        </a>
     </div>
 
     <div class="mobile-filters">
@@ -437,7 +527,8 @@
     <div class="main-container">
         <aside class="sidebar" id="sidebar">
             <div class="search-section">
-                <input type="text" class="search-box" placeholder="Search slang terms..." id="searchBox" onkeyup="filterTerms()">
+                <input type="text" class="search-box" placeholder="Search slang terms..." 
+                       id="searchBox" onkeyup="filterTerms()">
             </div>
 
             <div class="filter-section">
@@ -446,42 +537,42 @@
                     <div class="gen-option active" onclick="toggleGeneration('all')">
                         <div class="gen-checkbox"></div>
                         <span class="gen-label">All Generations</span>
-                        <span class="gen-count">28</span>
+                        <span class="gen-count" id="count-all">0</span>
                     </div>
                     <div class="gen-option" onclick="toggleGeneration('silent-gen')">
                         <div class="gen-checkbox"></div>
                         <span class="gen-label">Silent Gen (1928-1945)</span>
-                        <span class="gen-count">5</span>
+                        <span class="gen-count" id="count-silent-gen">0</span>
                     </div>
                     <div class="gen-option" onclick="toggleGeneration('baby-boomers')">
                         <div class="gen-checkbox"></div>
                         <span class="gen-label">Baby Boomers (1946-1964)</span>
-                        <span class="gen-count">0</span>
+                        <span class="gen-count" id="count-baby-boomers">0</span>
                     </div>
                     <div class="gen-option" onclick="toggleGeneration('gen-x')">
                         <div class="gen-checkbox"></div>
                         <span class="gen-label">Generation X (1965-1980)</span>
-                        <span class="gen-count">0</span>
+                        <span class="gen-count" id="count-gen-x">0</span>
                     </div>
                     <div class="gen-option" onclick="toggleGeneration('millennial')">
                         <div class="gen-checkbox"></div>
                         <span class="gen-label">Millennials (1981-1996)</span>
-                        <span class="gen-count">7</span>
+                        <span class="gen-count" id="count-millennial">0</span>
                     </div>
                     <div class="gen-option" onclick="toggleGeneration('gen-z')">
                         <div class="gen-checkbox"></div>
                         <span class="gen-label">Gen Z (1997-2012)</span>
-                        <span class="gen-count">12</span>
+                        <span class="gen-count" id="count-gen-z">0</span>
                     </div>
                     <div class="gen-option" onclick="toggleGeneration('gen-alpha')">
                         <div class="gen-checkbox"></div>
                         <span class="gen-label">Gen Alpha (2013-present)</span>
-                        <span class="gen-count">8</span>
+                        <span class="gen-count" id="count-gen-alpha">0</span>
                     </div>
                     <div class="gen-option" onclick="toggleGeneration('cross-gen')">
                         <div class="gen-checkbox"></div>
                         <span class="gen-label">Cross-Generational</span>
-                        <span class="gen-count">4</span>
+                        <span class="gen-count" id="count-cross-gen">0</span>
                     </div>
                 </div>
             </div>
@@ -496,71 +587,103 @@
                     <div class="category-chip" onclick="toggleCategory('social')">Social</div>
                 </div>
             </div>
-
-
-
-
         </aside>
 
         <main class="content">
             <div class="results-header">
                 <div class="results-count">
-                    Showing <span id="resultCount">10</span> of 23 terms
+                    Showing <span id="resultCount">0</span> terms
                 </div>
                 <div class="sort-options">
                     <button class="sort-btn active" onclick="sortBy('trending')">Trending</button>
                     <button class="sort-btn" onclick="sortBy('alphabetical')">A-Z</button>
                     <button class="sort-btn" onclick="sortBy('newest')">Newest</button>
-                    <button class="sort-btn" onclick="sortBy('mentions')">Most Used</button>
                 </div>
             </div>
 
             <div class="terms-grid" id="termsContainer">
-                <!-- Terms will be loaded dynamically from database -->
-                <div style="text-align: center; padding: 40px; color: #666;">
-                    <p>Loading terms from database...</p>
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading dictionary terms...</p>
                 </div>
             </div>
         </main>
     </div>
 
     <script>
-        // Global variables
+        // Global state
         let activeGeneration = 'all';
         let activeCategory = 'all';
         let currentSort = 'trending';
         let allTermsData = [];
-        let generationStats = {};
+        let isLoading = true;
 
-        // Fetch real data from your Flask API
-        async function loadRealData() {
+        // API endpoints
+        const API_BASE = 'http://localhost:5001/api';
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing GENwear Dictionary...');
+            loadDictionaryData();
+        });
+
+        // Load data from Flask API
+        async function loadDictionaryData() {
             try {
-                // Fetch stats for generation counts
-                const statsResponse = await fetch('http://localhost:5001/api/stats');
-                const stats = await statsResponse.json();
-                generationStats = stats.generationCounts;
+                setLoadingState();
                 
-                // Update generation counts in sidebar
-                updateGenerationCounts(stats);
-                
-                // Fetch all terms
-                const termsResponse = await fetch('http://localhost:5001/api/terms');
+                // Load stats and terms in parallel
+                const [statsResponse, termsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/stats`).catch(() => null),
+                    fetch(`${API_BASE}/terms`)
+                ]);
+
+                // Handle stats (optional)
+                if (statsResponse && statsResponse.ok) {
+                    const stats = await statsResponse.json();
+                    updateGenerationCounts(stats);
+                }
+
+                // Handle terms (required)
+                if (!termsResponse.ok) {
+                    throw new Error(`HTTP ${termsResponse.status}`);
+                }
+
                 const termsData = await termsResponse.json();
-                allTermsData = termsData.terms;
+                allTermsData = termsData.terms || [];
                 
-                // Populate dictionary with real terms
                 populateTerms(allTermsData);
-                
-                // Update results count
                 updateResultCount();
                 
-                console.log(`Loaded ${allTermsData.length} terms from database`);
+                console.log(`Successfully loaded ${allTermsData.length} terms`);
                 
             } catch (error) {
-                console.error('Error loading data:', error);
-                // Fallback to static data if API fails
-                console.log('Using static data as fallback');
+                console.error('Failed to load dictionary data:', error);
+                setErrorState();
+            } finally {
+                isLoading = false;
             }
+        }
+
+        function setLoadingState() {
+            const container = document.getElementById('termsContainer');
+            container.innerHTML = `
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading dictionary terms...</p>
+                </div>
+            `;
+        }
+
+        function setErrorState() {
+            const container = document.getElementById('termsContainer');
+            container.innerHTML = `
+                <div class="error-state">
+                    <h3>Unable to load dictionary</h3>
+                    <p>Please check that your Flask server is running on port 5001</p>
+                    <button class="retry-btn" onclick="loadDictionaryData()">Retry</button>
+                </div>
+            `;
         }
 
         function updateGenerationCounts(stats) {
@@ -568,19 +691,29 @@
             const counts = stats.generationCounts || {};
             
             // Update each generation count
-            document.querySelector('[onclick="toggleGeneration(\'all\')"] .gen-count').textContent = totalCount;
-            document.querySelector('[onclick="toggleGeneration(\'silent-gen\')"] .gen-count').textContent = counts['silent-gen'] || 0;
-            document.querySelector('[onclick="toggleGeneration(\'baby-boomers\')"] .gen-count').textContent = counts['baby-boomers'] || 0;
-            document.querySelector('[onclick="toggleGeneration(\'gen-x\')"] .gen-count').textContent = counts['gen-x'] || 0;
-            document.querySelector('[onclick="toggleGeneration(\'millennial\')"] .gen-count').textContent = counts['millennial'] || 0;
-            document.querySelector('[onclick="toggleGeneration(\'gen-z\')"] .gen-count').textContent = counts['gen-z'] || 0;
-            document.querySelector('[onclick="toggleGeneration(\'gen-alpha\')"] .gen-count').textContent = counts['gen-alpha'] || 0;
-            document.querySelector('[onclick="toggleGeneration(\'cross-gen\')"] .gen-count').textContent = counts['cross-gen'] || 0;
+            document.getElementById('count-all').textContent = totalCount;
+            document.getElementById('count-silent-gen').textContent = counts['silent-gen'] || 0;
+            document.getElementById('count-baby-boomers').textContent = counts['baby-boomers'] || 0;
+            document.getElementById('count-gen-x').textContent = counts['gen-x'] || 0;
+            document.getElementById('count-millennial').textContent = counts['millennial'] || 0;
+            document.getElementById('count-gen-z').textContent = counts['gen-z'] || 0;
+            document.getElementById('count-gen-alpha').textContent = counts['gen-alpha'] || 0;
+            document.getElementById('count-cross-gen').textContent = counts['cross-gen'] || 0;
         }
 
         function populateTerms(terms) {
             const container = document.getElementById('termsContainer');
-            container.innerHTML = ''; // Clear existing terms
+            container.innerHTML = '';
+            
+            if (terms.length === 0) {
+                container.innerHTML = `
+                    <div class="error-state">
+                        <h3>No terms found</h3>
+                        <p>Try adjusting your search or filters</p>
+                    </div>
+                `;
+                return;
+            }
             
             terms.forEach(term => {
                 const termElement = createTermElement(term);
@@ -593,27 +726,23 @@
             termDiv.className = 'term';
             termDiv.setAttribute('data-generation', termData.generation);
             termDiv.setAttribute('data-category', termData.category);
-            termDiv.setAttribute('data-trending', termData.trending_status);
+            termDiv.setAttribute('data-trending', termData.trending_status || 'stable');
             
-            // Determine trending badge
-            let trendingBadge = '';
-            let trendingClass = 'trending-stable';
-            let trendingText = 'STABLE';
+            // Trending badge
+            const trendingStatus = termData.trending_status || 'stable';
+            const trendingConfig = {
+                'hot': { class: 'trending-hot', text: 'HOT' },
+                'rising': { class: 'trending-rising', text: 'RISING' },
+                'stable': { class: 'trending-stable', text: 'STABLE' }
+            };
             
-            if (termData.trending_status === 'hot') {
-                trendingClass = 'trending-hot';
-                trendingText = 'HOT';
-            } else if (termData.trending_status === 'rising') {
-                trendingClass = 'trending-rising';
-                trendingText = 'RISING';
-            }
+            const trending = trendingConfig[trendingStatus] || trendingConfig.stable;
+            const trendingBadge = `<span class="trending-indicator ${trending.class}">${trending.text}</span>`;
             
-            trendingBadge = `<span class="trending-indicator ${trendingClass}">${trendingText}</span>`;
-            
-            // Determine generation display name
+            // Generation display name
             const generationNames = {
                 'silent-gen': 'Silent Gen',
-                'baby-boomers': 'Baby Boomers',
+                'baby-boomers': 'Baby Boomers', 
                 'gen-x': 'Gen X',
                 'millennial': 'Millennial',
                 'gen-z': 'Gen Z',
@@ -623,25 +752,31 @@
             
             const generationDisplay = generationNames[termData.generation] || 'Unknown';
             
-            // Calculate trend percentage
-            const trendPercentage = termData.mentions_today > 0 ? 
-                Math.min(Math.round((termData.mentions_today / 10) * 100), 100) : 0;
+            // Definition handling
+            let definitionHTML = '';
+            if (!termData.definition || 
+                termData.definition === 'No definition available' ||
+                termData.definition === 'Approved slang term') {
+                definitionHTML = `
+                    <em>Definition not available</em>
+                    <button class="research-btn" onclick="researchTerm('${termData.term}')">
+                        Research Now
+                    </button>
+                `;
+            } else {
+                definitionHTML = termData.definition;
+            }
             
             termDiv.innerHTML = `
                 <div class="term-header">
                     <h3 class="term-name">${termData.term}</h3>
                     ${trendingBadge}
                 </div>
-                <div class="definition">${termData.definition}</div>
-                <div class="origin">${termData.context}</div>
+                <div class="definition">${definitionHTML}</div>
                 <div class="term-footer">
                     <div class="term-tags">
                         <span class="tag tag-generation">${generationDisplay}</span>
                         <span class="tag tag-category">${termData.category.charAt(0).toUpperCase() + termData.category.slice(1)}</span>
-                    </div>
-                    <div class="usage-stats">
-                        <div class="stat">📈 +${trendPercentage}%</div>
-                        <div class="stat">💬 ${termData.mentions_today} mentions</div>
                     </div>
                 </div>
             `;
@@ -649,11 +784,30 @@
             return termDiv;
         }
 
-        function updateResultCount() {
-            const visibleTerms = document.querySelectorAll('.term:not([style*="display: none"])').length;
-            document.getElementById('resultCount').textContent = visibleTerms;
+        // Research functionality
+        async function researchTerm(term) {
+            try {
+                const response = await fetch(`${API_BASE}/research`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ term: term })
+                });
+
+                if (response.ok) {
+                    console.log(`Researching term: ${term}`);
+                    // Reload data to show updated definition
+                    setTimeout(() => loadDictionaryData(), 2000);
+                } else {
+                    console.error('Research request failed');
+                }
+            } catch (error) {
+                console.error('Error researching term:', error);
+            }
         }
 
+        // Filter and sort functions
         function toggleMobileFilters() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('mobile-open');
@@ -694,13 +848,15 @@
         }
 
         function filterTerms() {
-            const searchTerm = document.getElementById('searchBox').value.toUpperCase();
+            if (isLoading) return;
+            
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
             const terms = document.querySelectorAll('.term');
             let visibleCount = 0;
 
             terms.forEach(term => {
-                const termName = term.querySelector('.term-name').textContent.toUpperCase();
-                const definition = term.querySelector('.definition').textContent.toUpperCase();
+                const termName = term.querySelector('.term-name').textContent.toLowerCase();
+                const definition = term.querySelector('.definition').textContent.toLowerCase();
                 const generation = term.getAttribute('data-generation');
                 const category = term.getAttribute('data-category');
 
@@ -721,23 +877,23 @@
                     shouldShow = false;
                 }
 
-                if (shouldShow) {
-                    term.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    term.style.display = 'none';
-                }
+                term.style.display = shouldShow ? 'block' : 'none';
+                if (shouldShow) visibleCount++;
             });
 
-            document.getElementById('resultCount').textContent = visibleCount;
+            updateResultCount(visibleCount);
             
-            // Re-apply current sort to visible terms
+            // Re-apply sort
             if (currentSort) {
-                const activeButton = document.querySelector('.sort-btn.active');
-                if (activeButton) {
-                    sortVisibleTerms(currentSort);
-                }
+                sortVisibleTerms(currentSort);
             }
+        }
+
+        function updateResultCount(count = null) {
+            if (count === null) {
+                count = document.querySelectorAll('.term:not([style*="display: none"])').length;
+            }
+            document.getElementById('resultCount').textContent = count;
         }
 
         function sortVisibleTerms(method) {
@@ -751,18 +907,12 @@
                         const nameB = b.querySelector('.term-name').textContent;
                         return nameA.localeCompare(nameB);
                     
-                    case 'mentions':
-                        const mentionsA = parseInt(a.querySelector('.usage-stats .stat:last-child').textContent.match(/\d+/)[0] || 0);
-                        const mentionsB = parseInt(b.querySelector('.usage-stats .stat:last-child').textContent.match(/\d+/)[0] || 0);
-                        return mentionsB - mentionsA;
-                    
                     case 'newest':
-                        // Could implement based on data attributes or database timestamps
+                        // For now, maintain current order
                         return 0;
                     
                     case 'trending':
                     default:
-                        // Sort by trending status: hot > rising > stable
                         const trendingOrder = { 'hot': 3, 'rising': 2, 'stable': 1 };
                         const trendingA = a.getAttribute('data-trending') || 'stable';
                         const trendingB = b.getAttribute('data-trending') || 'stable';
@@ -773,12 +923,6 @@
             // Re-append sorted terms
             terms.forEach(term => container.appendChild(term));
         }
-
-        // Initialize page with real data
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Loading GENwear Dictionary with real data...');
-            loadRealData();
-        });
     </script>
 </body>
 </html>
