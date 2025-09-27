@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - GENwear Dictionary</title>
+    <style>
+        :root {
+            --bg: #000;
+            --surface: #0d0d0f;
+            --surface-hover: #1a1a1a;
+            --text: #eaeaea;
+            --text-muted: #999;
+            --text-subtle: #666;
+            --accent-primary: #ff0080;
+            --accent-secondary: #7928ca;
+            --accent-tertiary: #22d3ee;
+            --border: #333;
+            --border-light: #1e1e22;
+            --radius: 8px;
+            --radius-large: 12px;
+            --success: #00ff88;
+            --warning: #ffaa00;
+            --danger: #ff0044;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+        }
+        
+        .btn-secondary {
+            background: var(--surface-hover);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: none;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-large);
+            padding: 24px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        .section {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-large);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .term-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .term-item {
+            background: #111;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        
+        .term-item:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent-primary);
+        }
+        
+        .term-info {
+            flex-grow: 1;
+        }
+        
+        .term-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .term-status {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .term-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+        
+        .status-pending {
+            color: var(--warning);
+        }
+        
+        .status-defined {
+            color: var(--success);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-large);
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-btn:hover {
+            color: var(--text);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #111;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: #111;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin: 16px 0;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .alert-danger {
+            background: rgba(255, 0, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .container {
+                padding: 16px;
+            }
+            
+            .modal-content {
+                padding: 24px;
+                width: 95%;
+            }
+            
+            .term-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .term-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="logo">GENwear Admin</h1>
+        <div class="header-actions">
+            <a href="dictionary.html" class="btn btn-secondary">View Dictionary</a>
+            <button onclick="logout()" class="btn btn-danger">Logout</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTerms">0</div>
+                <div class="stat-label">Total Terms</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="definedTerms">0</div>
+                <div class="stat-label">Defined Terms</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingTerms">0</div>
+                <div class="stat-label">Pending Research</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="completionRate">0%</div>
+                <div class="stat-label">Completion Rate</div>
+            </div>
+        </div>
+        
+        <!-- Pending Research Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Pending Research</h2>
+                <button onclick="researchAllPending()" class="btn btn-primary">
+                    Research All Pending
+                </button>
+            </div>
+            <div id="pendingList" class="term-list">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading pending terms...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">All Terms</h2>
+                <button onclick="openAddModal()" class="btn btn-primary">
+                    Add New Term
+                </button>
+            </div>
+            <div id="allTermsList" class="term-list">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading all terms...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Term Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Term</h3>
+                <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
+            </div>
+            <form id="editForm" onsubmit="updateTerm(event)">
+                <div class="form-group">
+                    <label class="form-label">Term</label>
+                    <input type="text" id="editTermName" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Definition</label>
+                    <textarea id="editDefinition" class="form-input form-textarea" 
+                              placeholder="Enter definition..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Generation</label>
+                    <select id="editGeneration" class="form-select">
+                        <option value="cross-gen">Cross-Generational</option>
+                        <option value="gen-z">Gen Z</option>
+                        <option value="gen-alpha">Gen Alpha</option>
+                        <option value="millennial">Millennial</option>
+                        <option value="gen-x">Gen X</option>
+                        <option value="baby-boomers">Baby Boomers</option>
+                        <option value="silent-gen">Silent Gen</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="editCategory" class="form-select">
+                        <option value="general">General</option>
+                        <option value="fashion">Fashion</option>
+                        <option value="attitude">Attitude</option>
+                        <option value="quality">Quality</option>
+                        <option value="social">Social</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Trending Status</label>
+                    <select id="editTrending" class="form-select">
+                        <option value="stable">Stable</option>
+                        <option value="rising">Rising</option>
+                        <option value="hot">Hot</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+                    <button type="button" onclick="closeModal('editModal')" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+            <div id="editAlert"></div>
+        </div>
+    </div>
+    
+    <!-- Add Term Modal -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Term</h3>
+                <button class="close-btn" onclick="closeModal('addModal')">&times;</button>
+            </div>
+            <form id="addForm" onsubmit="addTerm(event)">
+                <div class="form-group">
+                    <label class="form-label">Term</label>
+                    <input type="text" id="addTermName" class="form-input" 
+                           placeholder="Enter slang term..." required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Definition</label>
+                    <textarea id="addDefinition" class="form-input form-textarea" 
+                              placeholder="Enter definition..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Generation</label>
+                    <select id="addGeneration" class="form-select">
+                        <option value="cross-gen">Cross-Generational</option>
+                        <option value="gen-z">Gen Z</option>
+                        <option value="gen-alpha">Gen Alpha</option>
+                        <option value="millennial">Millennial</option>
+                        <option value="gen-x">Gen X</option>
+                        <option value="baby-boomers">Baby Boomers</option>
+                        <option value="silent-gen">Silent Gen</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="addCategory" class="form-select">
+                        <option value="general">General</option>
+                        <option value="fashion">Fashion</option>
+                        <option value="attitude">Attitude</option>
+                        <option value="quality">Quality</option>
+                        <option value="social">Social</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Add Term</button>
+                    <button type="button" onclick="closeModal('addModal')" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+            <div id="addAlert"></div>
+        </div>
+    </div>
+    
+    <script>
+        // API Configuration
+        const API_BASE = 'http://localhost:5001/api';
+        
+        // Global state
+        let allTerms = [];
+        let pendingTerms = [];
+        
+        // Authentication check
+        function checkAuth() {
+            const isAdmin = sessionStorage.getItem('genwear_admin');
+            const loginTime = sessionStorage.getItem('admin_login_time');
+            
+            if (!isAdmin || !loginTime || (Date.now() - loginTime) > 24 * 60 * 60 * 1000) {
+                window.location.href = 'admin-login.html';
+                return false;
+            }
+            return true;
+        }
+        
+        function logout() {
+            sessionStorage.removeItem('genwear_admin');
+            sessionStorage.removeItem('admin_login_time');
+            window.location.href = 'admin-login.html';
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            if (checkAuth()) {
+                loadDashboardData();
+            }
+        });
+        
+        async function loadDashboardData() {
+            try {
+                // Load all terms
+                const termsResponse = await fetch(`${API_BASE}/terms`);
+                const termsData = await termsResponse.json();
+                allTerms = termsData.terms || [];
+                
+                // Load stats
+                const statsResponse = await fetch(`${API_BASE}/stats`);
+                const stats = await statsResponse.json();
+                
+                updateStats(stats);
+                updateTermsLists();
+                
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                showAlert('editAlert', 'Failed to load dashboard data', 'danger');
+            }
+        }
+        
+        function updateStats(stats) {
+            const defined = allTerms.filter(term => 
+                term.definition && 
+                term.definition !== 'No definition available' && 
+                term.definition !== 'Approved slang term'
+            ).length;
+            
+            const pending = allTerms.length - defined;
+            const completionRate = allTerms.length > 0 ? Math.round((defined / allTerms.length) * 100) : 0;
+            
+            document.getElementById('totalTerms').textContent = allTerms.length;
+            document.getElementById('definedTerms').textContent = defined;
+            document.getElementById('pendingTerms').textContent = pending;
+            document.getElementById('completionRate').textContent = completionRate + '%';
+        }
+        
+        function updateTermsLists() {
+            // Update pending terms
+            pendingTerms = allTerms.filter(term => 
+                !term.definition || 
+                term.definition === 'No definition available' || 
+                term.definition === 'Approved slang term'
+            );
+            
+            const pendingList = document.getElementById('pendingList');
+            if (pendingTerms.length === 0) {
+                pendingList.innerHTML = `
+                    <div class="empty-state">
+                        <h3>All terms have definitions!</h3>
+                        <p>Great job! All terms in your dictionary have been researched.</p>
+                    </div>
+                `;
+            } else {
+                pendingList.innerHTML = pendingTerms.map(term => `
+                    <div class="term-item">
+                        <div class="term-info">
+                            <div class="term-name">${term.term}</div>
+                            <div class="term-status status-pending">Definition needed</div>
+                        </div>
+                        <div class="term-actions">
+                            <button onclick="researchTerm('${term.term}')" class="btn btn-primary btn-small">
+                                Research
+                            </button>
+                            <button onclick="editTerm('${term.term}')" class="btn btn-secondary btn-small">
+                                Edit
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Update all terms list
+            const allTermsList = document.getElementById('allTermsList');
+            allTermsList.innerHTML = allTerms.map(term => {
+                const hasDefinition = term.definition && 
+                    term.definition !== 'No definition available' && 
+                    term.definition !== 'Approved slang term';
+                
+                return `
+                    <div class="term-item">
+                        <div class="term-info">
+                            <div class="term-name">${term.term}</div>
+                            <div class="term-status ${hasDefinition ? 'status-defined' : 'status-pending'}">
+                                ${hasDefinition ? 'Defined' : 'Needs definition'} • ${term.generation} • ${term.category}
+                            </div>
+                        </div>
+                        <div class="term-actions">
+                            <button onclick="editTerm('${term.term}')" class="btn btn-secondary btn-small">
+                                Edit
+                            </button>
+                            <button onclick="deleteTerm('${term.term}')" class="btn btn-danger btn-small">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Research functions
+        async function researchTerm(termName) {
+            try {
+                const response = await fetch(`${API_BASE}/admin/research`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ term: termName })
+                });
+                
+                if (response.ok) {
+                    showAlert('editAlert', `Researching "${termName}"...`, 'success');
+                    setTimeout(() => loadDashboardData(), 3000);
+                } else {
+                    throw new Error('Research failed');
+                }
+            } catch (error) {
+                showAlert('editAlert', `Failed to research "${termName}"`, 'danger');
+            }
+        }
+        
+        async function researchAllPending() {
+            if (pendingTerms.length === 0) return;
+            
+            if (!confirm(`Research all ${pendingTerms.length} pending terms? This may take several minutes.`)) {
+                return;
+            }
+            
+            for (const term of pendingTerms) {
+                await researchTerm(term.term);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Rate limiting
+            }
+        }
+        
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        function openAddModal() {
+            document.getElementById('addForm').reset();
+            document.getElementById('addAlert').innerHTML = '';
+            openModal('addModal');
+        }
+        
+        function editTerm(termName) {
+            const term = allTerms.find(t => t.term === termName);
+            if (!term) return;
+            
+            document.getElementById('editTermName').value = term.term;
+            document.getElementById('editDefinition').value = term.definition || '';
+            document.getElementById('editGeneration').value = term.generation;
+            document.getElementById('editCategory').value = term.category;
+            document.getElementById('editTrending').value = term.trending_status || 'stable';
+            document.getElementById('editAlert').innerHTML = '';
+            
+            openModal('editModal');
+        }
+        
+        // CRUD operations
+        async function addTerm(event) {
+            event.preventDefault();
+            
+            const termData = {
+                term: document.getElementById('addTermName').value.toLowerCase(),
+                definition: document.getElementById('addDefinition').value || null,
+                generation: document.getElementById('addGeneration').value,
+                category: document.getElementById('addCategory').value,
+                trending_status: 'stable'
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/terms`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(termData)
+                });
+                
+                if (response.ok) {
+                    showAlert('addAlert', 'Term added successfully!', 'success');
+                    setTimeout(() => {
+                        closeModal('addModal');
+                        loadDashboardData();
+                    }, 1500);
+                } else {
+                    throw new Error('Failed to add term');
+                }
+            } catch (error) {
+                showAlert('addAlert', 'Failed to add term', 'danger');
+            }
+        }
+        
+        async function updateTerm(event) {
+            event.preventDefault();
+            
+            const termData = {
+                term: document.getElementById('editTermName').value,
+                definition: document.getElementById('editDefinition').value,
+                generation: document.getElementById('editGeneration').value,
+                category: document.getElementById('editCategory').value,
+                trending_status: document.getElementById('editTrending').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/terms/${termData.term}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(termData)
+                });
+                
+                if (response.ok) {
+                    showAlert('editAlert', 'Term updated successfully!', 'success');
+                    setTimeout(() => {
+                        closeModal('editModal');
+                        loadDashboardData();
+                    }, 1500);
+                } else {
+                    throw new Error('Failed to update term');
+                }
+            } catch (error) {
+                showAlert('editAlert', 'Failed to update term', 'danger');
+            }
+        }
+        
+        async function deleteTerm(termName) {
+            if (!confirm(`Are you sure you want to delete "${termName}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/terms/${termName}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadDashboardData();
+                } else {
+                    throw new Error('Failed to delete term');
+                }
+            } catch (error) {
+                alert('Failed to delete term');
+            }
+        }
+        
+        function showAlert(elementId, message, type) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        }
+        
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
