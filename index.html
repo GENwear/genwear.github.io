@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GENwear — Speak Slang. Wear GEN.</title>
+  <title>GENwear – Speak Slang. Wear GEN.</title>
 
   <!-- SEO -->
   <meta name="description" content="GENwear uses AI to track viral slang in real-time and turn it into limited-run streetwear. Speak Slang. Wear GEN." />
   <link rel="canonical" href="https://genwear.github.io/" />
 
   <!-- Open Graph -->
-  <meta property="og:title" content="GENwear — Speak Slang. Wear GEN." />
+  <meta property="og:title" content="GENwear – Speak Slang. Wear GEN." />
   <meta property="og:description" content="AI-powered slang tracking meets streetwear. Bold statements. Viral catchphrases. Wear what your generation sounds like." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://genwear.github.io/" />
@@ -43,6 +43,23 @@
     .menu a:hover{opacity:1}
     .cta{padding:10px 14px;border-radius:999px;background:linear-gradient(90deg,var(--accent1),var(--accent2));font-weight:700;transition:transform 0.2s}
     .cta:hover{transform:scale(1.05)}
+
+    /* Admin link - subtle in footer */
+    .admin-link {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      opacity: 0.3;
+      font-size: 12px;
+      padding: 8px 12px;
+      background: var(--surface);
+      border: 1px solid #333;
+      border-radius: 6px;
+      transition: opacity 0.2s;
+    }
+    .admin-link:hover {
+      opacity: 1;
+    }
 
     /* Mobile menu */
     .hamburger{display:none;cursor:pointer}
@@ -410,6 +427,9 @@
       <p class="subtle">© 2024 GENwear. AI-powered slang tracking meets streetwear.</p>
     </div>
   </footer>
+
+  <!-- Discrete admin access -->
+  <a href="admin-login.html" class="admin-link">Admin</a>
 
   <script>
     function toggleMobile() {
