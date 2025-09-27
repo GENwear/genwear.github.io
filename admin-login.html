@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - GENwear Dictionary</title>
+    <style>
+        :root {
+            --bg: #000;
+            --surface: #0d0d0f;
+            --text: #eaeaea;
+            --text-muted: #999;
+            --accent-primary: #ff0080;
+            --accent-secondary: #7928ca;
+            --border: #333;
+            --radius: 8px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .logo {
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            background: #111;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: var(--radius);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error-message {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff0000;
+            color: #ff4444;
+            padding: 12px;
+            border-radius: var(--radius);
+            margin: 16px 0;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .success-message {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            color: #44ff44;
+            padding: 12px;
+            border-radius: var(--radius);
+            margin: 16px 0;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 24px;
+            display: inline-block;
+            transition: color 0.2s;
+        }
+        
+        .back-link:hover {
+            color: var(--accent-primary);
+        }
+        
+        .loading {
+            display: none;
+            margin-top: 16px;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1 class="logo">GENwear</h1>
+        <p class="subtitle">Admin Dashboard Access</p>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="password">Admin Password</label>
+                <input type="password" id="password" name="password" required 
+                       placeholder="Enter admin password">
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">
+                Access Dashboard
+            </button>
+        </form>
+        
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 8px; font-size: 14px;">Authenticating...</p>
+        </div>
+        
+        <a href="index.html" class="back-link">← Back to GENwear</a>
+    </div>
+    
+    <script>
+        // Simple client-side admin authentication
+        // In production, this should be server-side with proper security
+        const ADMIN_PASSWORD = 'genwear2024'; // Change this to your desired password
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            const successDiv = document.getElementById('successMessage');
+            successDiv.style.display = 'none';
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.style.display = 'none';
+        }
+        
+        function setLoading(loading) {
+            const loginBtn = document.getElementById('loginBtn');
+            const loadingDiv = document.getElementById('loading');
+            const form = document.getElementById('loginForm');
+            
+            if (loading) {
+                loginBtn.disabled = true;
+                loadingDiv.style.display = 'block';
+                form.style.opacity = '0.6';
+            } else {
+                loginBtn.disabled = false;
+                loadingDiv.style.display = 'none';
+                form.style.opacity = '1';
+            }
+        }
+        
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            
+            // Clear previous messages
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            
+            setLoading(true);
+            
+            // Simulate authentication delay
+            setTimeout(() => {
+                if (password === ADMIN_PASSWORD) {
+                    // Store admin session
+                    sessionStorage.setItem('genwear_admin', 'true');
+                    sessionStorage.setItem('admin_login_time', Date.now());
+                    
+                    showSuccess('Login successful! Redirecting...');
+                    
+                    // Redirect to admin dashboard
+                    setTimeout(() => {
+                        window.location.href = 'admin.html';
+                    }, 1500);
+                } else {
+                    showError('Invalid password. Please try again.');
+                    document.getElementById('password').value = '';
+                }
+                
+                setLoading(false);
+            }, 1000);
+        }
+        
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const isAdmin = sessionStorage.getItem('genwear_admin');
+            const loginTime = sessionStorage.getItem('admin_login_time');
+            
+            // Check if session is still valid (24 hours)
+            if (isAdmin && loginTime && (Date.now() - loginTime) < 24 * 60 * 60 * 1000) {
+                window.location.href = 'admin.html';
+            }
+        });
+        
+        // Auto-focus password field
+        document.getElementById('password').focus();
+    </script>
+</body>
+</html>
