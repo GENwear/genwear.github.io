@@ -1948,4 +1948,914 @@ if __name__ == '__main__':
     print("=" * 60)
     
     # Start Flask development server
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=True, host='0.0.0.0', port=5001)#!/usr/bin/env python3
+"""
+GENwear Slang Tracker - Flask Application for Railway Deployment
+Fixed version with proper routing, port configuration, and production settings
+"""
+
+import os
+import sys
+from datetime import datetime, timedelta
+from flask import Flask, render_template_string, request, jsonify, redirect, session
+
+# Initialize Flask app
+app = Flask(__name__)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'change-this-in-production-genwear-2024')
+
+# Simple in-memory database for demo (replace with your real database)
+class SimpleDatabase:
+    def __init__(self):
+        self.terms = [
+            {
+                'term': 'fit', 'definition': 'An outfit or clothing style', 'category': 'fashion',
+                'mentions': 25, 'avg_engagement': 85.0, 'first_seen': '2024-01-15',
+                'approval_status': 'pending', 'generation': 'gen-z'
+            },
+            {
+                'term': 'drip', 'definition': 'Stylish clothing or accessories', 'category': 'fashion',
+                'mentions': 30, 'avg_engagement': 92.0, 'first_seen': '2024-01-10',
+                'approval_status': 'approved', 'generation': 'gen-z'
+            },
+            {
+                'term': 'mid', 'definition': 'Average or mediocre', 'category': 'quality',
+                'mentions': 15, 'avg_engagement': 45.0, 'first_seen': '2024-01-20',
+                'approval_status': 'pending', 'generation': 'gen-z'
+            },
+            {
+                'term': 'slay', 'definition': 'To do something excellently', 'category': 'attitude',
+                'mentions': 40, 'avg_engagement': 88.0, 'first_seen': '2024-01-05',
+                'approval_status': 'approved', 'generation': 'gen-z'
+            },
+            {
+                'term': 'basic', 'definition': 'Mainstream or unoriginal', 'category': 'quality',
+                'mentions': 12, 'avg_engagement': 35.0, 'first_seen': '2024-01-25',
+                'approval_status': 'rejected', 'generation': 'millennial'
+            }
+        ]
+    
+    def get_trending_terms(self, limit=100):
+        return self.terms[:limit]
+    
+    def get_approved_terms(self, limit=100):
+        approved = [t for t in self.terms if t.get('approval_status') == 'approved']
+        return approved[:limit]
+    
+    def get_stats(self):
+        total = len(self.terms)
+        approved = len([t for t in self.terms if t.get('approval_status') == 'approved'])
+        pending = len([t for t in self.terms if t.get('approval_status', 'pending') == 'pending'])
+        total_mentions = sum(t['mentions'] for t in self.terms)
+        
+        return {
+            'total_terms': total,
+            'approved_terms': approved,
+            'pending_terms': pending,
+            'total_mentions': total_mentions
+        }
+    
+    def approve_term(self, term_name):
+        for term in self.terms:
+            if term['term'].lower() == term_name.lower():
+                term['approval_status'] = 'approved'
+                term['approved_at'] = datetime.now().isoformat()
+                return True
+        return False
+    
+    def reject_term(self, term_name, reason=""):
+        for term in self.terms:
+            if term['term'].lower() == term_name.lower():
+                term['approval_status'] = 'rejected'
+                term['rejection_reason'] = reason
+                return True
+        return False
+
+# Initialize database
+try:
+    db = SimpleDatabase()
+    print("Database connection established")
+except Exception as e:
+    print(f"Database initialization failed: {e}")
+    sys.exit(1)
+
+# Admin Configuration
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'genwear2024')
+
+# Authentication helpers
+def is_authenticated():
+    return session.get('admin_authenticated', False)
+
+def requires_admin(f):
+    def decorated_function(*args, **kwargs):
+        if not is_authenticated():
+            return redirect('/admin-login')
+        return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__
+    return decorated_function
+
+# CORS handler
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    return response
+
+# ============================================================================
+# AUTHENTICATION ROUTES
+# ============================================================================
+
+@app.route('/admin-login')
+def admin_login_page():
+    if is_authenticated():
+        return redirect('/')
+    
+    error = request.args.get('error')
+    
+    html = '''
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Login - GENwear</title>
+        <style>
+            :root {
+                --bg: #000; --surface: #0d0d0f; --text: #eaeaea; --muted: #b5b5b5;
+                --accent1: #ff0080; --accent2: #7928ca; --accent3: #22d3ee;
+            }
+            * { box-sizing: border-box; }
+            body {
+                font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+                background: var(--bg); color: var(--text); margin: 0; padding: 0; min-height: 100vh;
+                display: flex; align-items: center; justify-content: center;
+            }
+            .login-container {
+                background: var(--surface); border-radius: 20px; padding: 40px;
+                width: 100%; max-width: 400px; text-align: center;
+                border: 1px solid #1e1e22; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            }
+            .logo { 
+                font-size: 2.5rem; font-weight: 800; margin-bottom: 8px;
+                background: linear-gradient(90deg, var(--accent1), var(--accent2));
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            }
+            .subtitle { color: var(--muted); margin-bottom: 32px; }
+            .form-group { margin-bottom: 24px; text-align: left; }
+            label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text); }
+            input[type="password"] { 
+                width: 100%; padding: 14px 16px; border: 1px solid #1e1e22;
+                border-radius: 10px; font-size: 16px; transition: border-color 0.2s;
+                background: var(--bg); color: var(--text);
+            }
+            input[type="password"]:focus { border-color: var(--accent1); outline: none; }
+            .login-btn { 
+                width: 100%; padding: 14px; background: linear-gradient(90deg, var(--accent1), var(--accent2));
+                border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: 600;
+                cursor: pointer; transition: transform 0.2s; 
+            }
+            .login-btn:hover { transform: translateY(-1px); }
+            .error { 
+                background: rgba(255,0,0,0.1); border: 1px solid #ff0000; color: #ff6b6b;
+                padding: 12px; border-radius: 8px; margin: 16px 0; font-size: 14px; 
+            }
+            .back-link { 
+                color: var(--accent1); text-decoration: none; font-size: 14px;
+                margin-top: 24px; display: inline-block; 
+            }
+            .back-link:hover { color: var(--accent2); }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <h1 class="logo">GENwear</h1>
+            <p class="subtitle">Admin Dashboard Access</p>
+            
+            <form method="POST" action="/admin-auth">
+                <div class="form-group">
+                    <label for="password">Admin Password</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Enter admin password" autofocus>
+                </div>
+                
+                <button type="submit" class="login-btn">Access Dashboard</button>
+            </form>
+            
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+            
+            <a href="/api/terms" class="back-link">← View Public API</a>
+        </div>
+    </body>
+    </html>
+    '''
+    
+    return render_template_string(html, error=error)
+
+@app.route('/admin-auth', methods=['POST'])
+def admin_authenticate():
+    password = request.form.get('password', '').strip()
+    
+    if password == ADMIN_PASSWORD:
+        session['admin_authenticated'] = True
+        session['admin_login_time'] = datetime.now().isoformat()
+        return redirect('/')
+    else:
+        return redirect('/admin-login?error=Invalid password')
+
+@app.route('/admin-logout')
+def admin_logout():
+    session.pop('admin_authenticated', None)
+    session.pop('admin_login_time', None)
+    return redirect('/admin-login')
+
+# ============================================================================
+# PUBLIC API ROUTES
+# ============================================================================
+
+@app.route('/api/stats')
+def api_stats():
+    try:
+        stats = db.get_stats()
+        approved_terms = db.get_approved_terms(limit=1000)
+        
+        generation_counts = {
+            'cross-gen': 0, 'gen-alpha': 0, 'gen-z': 0, 'millennial': 0,
+            'gen-x': 0, 'baby-boomers': 0, 'silent-gen': 0
+        }
+        
+        for term in approved_terms:
+            generation = term.get('generation', 'cross-gen')
+            if generation in generation_counts:
+                generation_counts[generation] += 1
+            else:
+                generation_counts['cross-gen'] += 1
+        
+        return jsonify({
+            'totalTerms': stats['approved_terms'],
+            'generationCounts': generation_counts,
+            'trendingCount': len([t for t in approved_terms if t['mentions'] > 5]),
+            'totalMentions': stats['total_mentions'],
+            'lastUpdated': '2m ago'
+        })
+    except Exception as e:
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/terms')
+def api_terms():
+    try:
+        approved_terms = db.get_approved_terms(limit=500)
+        terms = []
+        
+        for term_data in approved_terms:
+            generation = term_data.get('generation', 'cross-gen')
+            
+            terms.append({
+                'term': term_data['term'].upper(),
+                'definition': term_data['definition'],
+                'generation': generation,
+                'category': term_data['category'],
+                'mentions_today': term_data['mentions'],
+                'mentions_total': term_data['mentions'],
+                'trending_status': 'hot' if term_data['mentions'] >= 15 else 'stable',
+                'context': f"Popular across {term_data['mentions']} mentions"
+            })
+        
+        return jsonify({'terms': terms, 'count': len(terms)})
+    except Exception as e:
+        return jsonify({'error': 'Internal server error'}), 500
+
+# ============================================================================
+# ADMIN API ROUTES
+# ============================================================================
+
+@app.route('/api/admin/terms')
+@requires_admin
+def api_admin_terms():
+    try:
+        terms_data = db.get_trending_terms(limit=1000)
+        terms = []
+        
+        for term_data in terms_data:
+            terms.append({
+                'term': term_data['term'].upper(),
+                'definition': term_data['definition'],
+                'generation': term_data.get('generation', 'cross-gen'),
+                'category': term_data['category'],
+                'mentions_today': term_data['mentions'],
+                'mentions_total': term_data['mentions'],
+                'trending_status': 'hot' if term_data['mentions'] >= 15 else 'stable',
+                'context': f"Popular across {term_data['mentions']} mentions",
+                'approval_status': term_data.get('approval_status', 'pending'),
+                'approved_by': term_data.get('approved_by'),
+                'approved_at': term_data.get('approved_at')
+            })
+        
+        return jsonify({'terms': terms, 'count': len(terms)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/approve/<term>', methods=['POST'])
+@requires_admin
+def approve_term_api(term):
+    try:
+        result = db.approve_term(term)
+        if result:
+            return jsonify({'success': True, 'message': f'Approved {term}'})
+        else:
+            return jsonify({'success': False, 'error': 'Term not found'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/reject/<term>', methods=['POST'])
+@requires_admin
+def reject_term_api(term):
+    try:
+        data = request.get_json() or {}
+        reason = data.get('reason', 'No reason provided')
+        result = db.reject_term(term, reason)
+        if result:
+            return jsonify({'success': True, 'message': f'Rejected {term}'})
+        else:
+            return jsonify({'success': False, 'error': 'Term not found'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/delete/<term>', methods=['DELETE'])
+@requires_admin
+def delete_term_api(term):
+    try:
+        result = db.reject_term(term, "Deleted by admin")
+        if result:
+            return jsonify({'success': True, 'message': f'Deleted {term}'})
+        else:
+            return jsonify({'success': False, 'error': 'Term not found'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/research', methods=['POST'])
+@requires_admin
+def admin_research_term():
+    try:
+        data = request.get_json()
+        term = data.get('term', '').lower().strip()
+        
+        if not term:
+            return jsonify({'error': 'No term provided'}), 400
+        
+        # Mock research results (replace with real research logic)
+        return jsonify({
+            'success': True,
+            'term': term,
+            'definition': f'Researched definition for {term}',
+            'category': 'fashion',
+            'usage_examples': [f'Example usage of {term}'],
+            'geographic_spread': 'National',
+            'source': 'urban_dictionary',
+            'research_timestamp': datetime.now().isoformat()
+        })
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/bulk-approve', methods=['POST'])
+@requires_admin
+def bulk_approve_terms():
+    try:
+        data = request.get_json()
+        terms = data.get('terms', [])
+        
+        if not terms:
+            return jsonify({'error': 'No terms provided'}), 400
+        
+        approved_count = 0
+        errors = []
+        
+        for term in terms:
+            try:
+                result = db.approve_term(term)
+                if result:
+                    approved_count += 1
+                else:
+                    errors.append(f"Term not found: {term}")
+            except Exception as e:
+                errors.append(f"Error approving {term}: {str(e)}")
+        
+        return jsonify({
+            'success': True,
+            'approved_count': approved_count,
+            'total_requested': len(terms),
+            'errors': errors
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ============================================================================
+# ADMIN DASHBOARD
+# ============================================================================
+
+@app.route('/')
+@requires_admin
+def dashboard():
+    try:
+        trending_terms = db.get_trending_terms(limit=1000)
+        total_terms = len(trending_terms)
+        
+        # Process terms data
+        for term in trending_terms:
+            term['engagement_score'] = min(100, max(0, term['avg_engagement']))
+            term['needs_research'] = not term.get('definition') or term['definition'] == ''
+            
+            # Categorize by engagement
+            if term['engagement_score'] >= 80:
+                term['engagement_category'] = 'hot'
+            elif term['engagement_score'] >= 60:
+                term['engagement_category'] = 'high'
+            elif term['engagement_score'] >= 40:
+                term['engagement_category'] = 'rising'
+            else:
+                term['engagement_category'] = 'low'
+        
+        # Split terms by engagement categories
+        hot_terms = [t for t in trending_terms if t['engagement_category'] == 'hot']
+        high_terms = [t for t in trending_terms if t['engagement_category'] == 'high']
+        rising_terms = [t for t in trending_terms if t['engagement_category'] == 'rising']
+        low_terms = [t for t in trending_terms if t['engagement_category'] == 'low']
+        
+        # Calculate metrics
+        pending_terms = [t for t in trending_terms if t.get('approval_status', 'pending') == 'pending']
+        approved_terms = [t for t in trending_terms if t.get('approval_status') == 'approved']
+        ready_for_review = len([t for t in trending_terms if t['engagement_score'] > 50 and t.get('approval_status', 'pending') == 'pending'])
+        
+        html = '''
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <title>GENwear Admin Dashboard</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                :root {
+                    --bg: #000; --surface: #0d0d0f; --text: #eaeaea; --muted: #b5b5b5;
+                    --accent1: #ff0080; --accent2: #7928ca; --accent3: #22d3ee;
+                }
+                * { box-sizing: border-box; }
+                body { 
+                    margin: 0; background: var(--bg); color: var(--text); 
+                    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; 
+                }
+                .header {
+                    background: var(--surface); padding: 16px 24px; 
+                    border-bottom: 1px solid #1e1e22;
+                    display: flex; justify-content: space-between; align-items: center;
+                }
+                .logo { 
+                    font-size: 1.5rem; font-weight: 800; 
+                    background: linear-gradient(90deg, var(--accent1), var(--accent2));
+                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                }
+                .btn { 
+                    padding: 8px 16px; border-radius: 8px; text-decoration: none; 
+                    font-weight: 600; transition: transform 0.2s; border: none; cursor: pointer;
+                }
+                .btn-primary { background: var(--accent1); color: white; }
+                .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid #1e1e22; }
+                .btn:hover { transform: translateY(-1px); }
+                .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+                .stats-grid {
+                    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+                    gap: 16px; margin-bottom: 32px;
+                }
+                .stat-card { 
+                    background: var(--surface); padding: 20px; border-radius: 12px; 
+                    text-align: center; border: 1px solid #1e1e22;
+                }
+                .stat-number { 
+                    font-size: 2em; font-weight: bold; 
+                    background: linear-gradient(90deg, var(--accent1), var(--accent2));
+                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                }
+                .stat-label { color: var(--muted); font-size: 0.9em; text-transform: uppercase; }
+                .terms-section { 
+                    background: var(--surface); padding: 24px; border-radius: 16px; 
+                    margin-bottom: 24px; border: 1px solid #1e1e22;
+                }
+                .section-header { 
+                    font-size: 1.3em; font-weight: bold; margin-bottom: 20px; 
+                    display: flex; justify-content: space-between; align-items: center;
+                }
+                .section-count { 
+                    background: rgba(255,0,128,0.1); padding: 4px 12px; border-radius: 12px; 
+                    font-size: 0.8em; color: var(--accent1);
+                }
+                .term-grid { display: grid; gap: 16px; }
+                .term-card { 
+                    background: var(--bg); border-radius: 12px; padding: 20px; 
+                    border: 1px solid #1e1e22; border-left: 4px solid var(--accent1);
+                }
+                .term-header { 
+                    display: flex; justify-content: space-between; align-items: center; 
+                    margin-bottom: 12px;
+                }
+                .term-name { font-size: 1.4em; font-weight: bold; }
+                .term-status { 
+                    padding: 4px 10px; border-radius: 12px; font-size: 0.75em; 
+                    font-weight: bold; text-transform: uppercase;
+                }
+                .hot { background: rgba(255,0,128,0.2); color: var(--accent1); }
+                .high { background: rgba(255,165,0,0.2); color: #ffa500; }
+                .rising { background: rgba(121,40,202,0.2); color: var(--accent2); }
+                .low { background: rgba(181,181,181,0.2); color: var(--muted); }
+                .approved { background: rgba(34,211,238,0.2); color: var(--accent3); }
+                .pending { background: rgba(255,165,0,0.2); color: #ffa500; }
+                .rejected { background: rgba(255,71,87,0.2); color: #ff4757; }
+                .term-definition { 
+                    background: #111; padding: 10px; border-radius: 8px; 
+                    margin: 12px 0; border: 1px solid #1e1e22;
+                }
+                .term-metrics { 
+                    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; 
+                    margin: 12px 0;
+                }
+                .metric { text-align: center; }
+                .metric-value { font-weight: bold; color: var(--text); }
+                .metric-label { font-size: 0.7em; color: var(--muted); text-transform: uppercase; }
+                .action-buttons { 
+                    display: flex; gap: 8px; margin-top: 12px; 
+                    padding-top: 12px; border-top: 1px solid #1e1e22;
+                }
+                .btn-approve { background: var(--accent3); color: var(--bg); }
+                .btn-reject { background: #ff4757; color: white; }
+                .btn-delete { background: #dc3545; color: white; }
+                .btn-research { background: var(--accent2); color: white; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1 class="logo">GENwear Admin Dashboard</h1>
+                <div>
+                    <a href="/api/terms" class="btn btn-secondary">Public API</a>
+                    <a href="/admin-logout" class="btn btn-primary">Logout</a>
+                </div>
+            </div>
+            
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ total_terms }}</div>
+                        <div class="stat-label">Total Terms</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{{ pending_terms|length }}</div>
+                        <div class="stat-label">Pending Review</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{{ ready_for_review }}</div>
+                        <div class="stat-label">Ready for Review</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{{ approved_terms|length }}</div>
+                        <div class="stat-label">Approved</div>
+                    </div>
+                </div>
+                
+                {% if hot_terms %}
+                <div class="terms-section">
+                    <div class="section-header">
+                        🔥 HOT Terms
+                        <div class="section-count">{{ hot_terms|length }} terms</div>
+                    </div>
+                    <div class="term-grid">
+                        {% for term in hot_terms %}
+                        <div class="term-card">
+                            <div class="term-header">
+                                <div class="term-name">{{ term.term }}</div>
+                                <div>
+                                    <span class="term-status hot">🔥 HOT</span>
+                                    <span class="term-status {{ term.get('approval_status', 'pending') }}">
+                                        {{ term.get('approval_status', 'pending')|title }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="term-definition">
+                                {{ term.definition }}
+                            </div>
+                            
+                            <div class="term-metrics">
+                                <div class="metric">
+                                    <div class="metric-value">{{ term.mentions }}</div>
+                                    <div class="metric-label">mentions</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ term.engagement_score|int }}</div>
+                                    <div class="metric-label">score</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ term.category|title }}</div>
+                                    <div class="metric-label">category</div>
+                                </div>
+                            </div>
+                            
+                            <div class="action-buttons">
+                                {% if term.get('approval_status') == 'approved' %}
+                                    <button class="btn btn-delete" onclick="deleteTerm('{{ term.term }}')">🗑️ Delete</button>
+                                {% elif term.get('approval_status') == 'rejected' %}
+                                    <button class="btn btn-approve" onclick="approveTerm('{{ term.term }}')">✅ Approve</button>
+                                {% else %}
+                                    <button class="btn btn-approve" onclick="approveTerm('{{ term.term }}')">✅ Approve</button>
+                                    <button class="btn btn-reject" onclick="rejectTerm('{{ term.term }}')">❌ Reject</button>
+                                {% endif %}
+                                <button class="btn btn-research" onclick="researchTerm('{{ term.term }}')">🔍 Research</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if high_terms %}
+                <div class="terms-section">
+                    <div class="section-header">
+                        ⚡ HIGH Terms
+                        <div class="section-count">{{ high_terms|length }} terms</div>
+                    </div>
+                    <div class="term-grid">
+                        {% for term in high_terms %}
+                        <div class="term-card">
+                            <div class="term-header">
+                                <div class="term-name">{{ term.term }}</div>
+                                <div>
+                                    <span class="term-status high">⚡ HIGH</span>
+                                    <span class="term-status {{ term.get('approval_status', 'pending') }}">
+                                        {{ term.get('approval_status', 'pending')|title }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="term-definition">
+                                {{ term.definition }}
+                            </div>
+                            
+                            <div class="term-metrics">
+                                <div class="metric">
+                                    <div class="metric-value">{{ term.mentions }}</div>
+                                    <div class="metric-label">mentions</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ term.engagement_score|int }}</div>
+                                    <div class="metric-label">score</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ term.category|title }}</div>
+                                    <div class="metric-label">category</div>
+                                </div>
+                            </div>
+                            
+                            <div class="action-buttons">
+                                {% if term.get('approval_status') == 'approved' %}
+                                    <button class="btn btn-delete" onclick="deleteTerm('{{ term.term }}')">🗑️ Delete</button>
+                                {% elif term.get('approval_status') == 'rejected' %}
+                                    <button class="btn btn-approve" onclick="approveTerm('{{ term.term }}')">✅ Approve</button>
+                                {% else %}
+                                    <button class="btn btn-approve" onclick="approveTerm('{{ term.term }}')">✅ Approve</button>
+                                    <button class="btn btn-reject" onclick="rejectTerm('{{ term.term }}')">❌ Reject</button>
+                                {% endif %}
+                                <button class="btn btn-research" onclick="researchTerm('{{ term.term }}')">🔍 Research</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if rising_terms %}
+                <div class="terms-section">
+                    <div class="section-header">
+                        📈 RISING Terms
+                        <div class="section-count">{{ rising_terms|length }} terms</div>
+                    </div>
+                    <div class="term-grid">
+                        {% for term in rising_terms %}
+                        <div class="term-card">
+                            <div class="term-header">
+                                <div class="term-name">{{ term.term }}</div>
+                                <div>
+                                    <span class="term-status rising">📈 RISING</span>
+                                    <span class="term-status {{ term.get('approval_status', 'pending') }}">
+                                        {{ term.get('approval_status', 'pending')|title }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="term-definition">
+                                {{ term.definition }}
+                            </div>
+                            
+                            <div class="term-metrics">
+                                <div class="metric">
+                                    <div class="metric-value">{{ term.mentions }}</div>
+                                    <div class="metric-label">mentions</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ term.engagement_score|int }}</div>
+                                    <div class="metric-label">score</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ term.category|title }}</div>
+                                    <div class="metric-label">category</div>
+                                </div>
+                            </div>
+                            
+                            <div class="action-buttons">
+                                {% if term.get('approval_status') == 'approved' %}
+                                    <button class="btn btn-delete" onclick="deleteTerm('{{ term.term }}')">🗑️ Delete</button>
+                                {% elif term.get('approval_status') == 'rejected' %}
+                                    <button class="btn btn-approve" onclick="approveTerm('{{ term.term }}')">✅ Approve</button>
+                                {% else %}
+                                    <button class="btn btn-approve" onclick="approveTerm('{{ term.term }}')">✅ Approve</button>
+                                    <button class="btn btn-reject" onclick="rejectTerm('{{ term.term }}')">❌ Reject</button>
+                                {% endif %}
+                                <button class="btn btn-research" onclick="researchTerm('{{ term.term }}')">🔍 Research</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <script>
+                function approveTerm(termName) {
+                    if (confirm('Approve "' + termName + '" for public use?')) {
+                        fetch('/api/admin/approve/' + encodeURIComponent(termName), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showNotification('✅ Approved: ' + termName, 'success');
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showNotification('❌ Error: ' + data.error, 'error');
+                            }
+                        });
+                    }
+                }
+                
+                function rejectTerm(termName) {
+                    const reason = prompt('Why reject "' + termName + '"?', 'Not suitable');
+                    if (reason !== null) {
+                        fetch('/api/admin/reject/' + encodeURIComponent(termName), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reason: reason })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showNotification('❌ Rejected: ' + termName, 'success');
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showNotification('❌ Error: ' + data.error, 'error');
+                            }
+                        });
+                    }
+                }
+                
+                function deleteTerm(termName) {
+                    if (confirm('Delete "' + termName + '" permanently?')) {
+                        fetch('/api/admin/delete/' + encodeURIComponent(termName), {
+                            method: 'DELETE'
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showNotification('🗑️ Deleted: ' + termName, 'success');
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                showNotification('❌ Error: ' + data.error, 'error');
+                            }
+                        });
+                    }
+                }
+                
+                function researchTerm(termName) {
+                    const button = event.target;
+                    button.disabled = true;
+                    button.textContent = '🔍 Researching...';
+                    
+                    fetch('/api/admin/research', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ term: termName })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification('✅ Research complete for: ' + termName, 'success');
+                        } else {
+                            showNotification('❌ Research failed for: ' + termName, 'error');
+                        }
+                        button.disabled = false;
+                        button.textContent = '🔍 Research';
+                    });
+                }
+                
+                function showNotification(message, type) {
+                    const notification = document.createElement('div');
+                    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 15px; border-radius: 8px; color: white; font-weight: bold; z-index: 1000;';
+                    if (type === 'success') {
+                        notification.style.background = '#22d3ee';
+                        notification.style.color = '#000';
+                    } else {
+                        notification.style.background = '#ff4757';
+                    }
+                    notification.textContent = message;
+                    document.body.appendChild(notification);
+                    setTimeout(() => notification.remove(), 3000);
+                }
+            </script>
+        </body>
+        </html>
+        '''
+        
+        return render_template_string(html,
+                                    total_terms=total_terms,
+                                    pending_terms=pending_terms,
+                                    approved_terms=approved_terms,
+                                    ready_for_review=ready_for_review,
+                                    hot_terms=hot_terms,
+                                    high_terms=high_terms,
+                                    rising_terms=rising_terms,
+                                    low_terms=low_terms)
+        
+    except Exception as e:
+        return f"Dashboard error: {e}", 500
+
+# ============================================================================
+# HEALTH CHECK & ROOT ROUTES
+# ============================================================================
+
+@app.route('/health')
+def health_check():
+    try:
+        stats = db.get_stats()
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'total_terms': stats['total_terms'],
+            'approved_terms': stats['approved_terms'],
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@app.route('/dictionary')
+def public_dictionary():
+    return jsonify({
+        'message': 'GENwear Public Dictionary API',
+        'endpoints': {
+            'terms': '/api/terms',
+            'stats': '/api/stats'
+        },
+        'admin': '/admin-login'
+    })
+
+# ============================================================================
+# APPLICATION STARTUP
+# ============================================================================
+
+if __name__ == '__main__':
+    print("=" * 60)
+    print("🚀 GENwear Admin Dashboard Starting...")
+    print("=" * 60)
+    
+    # Get port from environment (Railway will set this)
+    port = int(os.environ.get('PORT', 5001))
+    debug_mode = os.environ.get('FLASK_ENV') == 'development'
+    
+    print(f"\n🌐 Server starting on port {port}")
+    print(f"🔧 Debug mode: {debug_mode}")
+    print(f"🔑 Admin password: {ADMIN_PASSWORD}")
+    
+    print("\n📋 Routes available:")
+    print(f"   🔐 Admin Login: /admin-login")
+    print(f"   📊 Dashboard: / (after login)")
+    print(f"   📚 Public API: /api/terms")
+    print(f"   📈 Stats API: /api/stats")
+    print(f"   🔧 Admin API: /api/admin/terms")
+    print(f"   🏥 Health Check: /health")
+    
+    print("\n" + "=" * 60)
+    print("✅ Ready for Railway deployment!")
+    print("=" * 60)
+    
+    # Start Flask server with Railway-compatible settings
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)
