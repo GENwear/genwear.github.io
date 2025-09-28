@@ -3,12 +3,21 @@
 GENwear Slang Tracker - Enhanced Flask Application
 Features: Admin authentication, website-styled dashboard, bulk management, research integration
 Fixed: Website color scheme, sticky filters, working buttons, delete functionality
+DEBUGGING: Added comprehensive request/error logging to catch 502 errors
 """
 
 import os
 import sys
+import logging
+import traceback
 from datetime import datetime, timedelta
 from flask import Flask, render_template_string, request, jsonify, redirect, session
+
+# ============================================================================
+# DEBUG LOGGING ADDITION - TO CATCH 502 ERRORS
+# ============================================================================
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Import database models with fallback
 try:
@@ -17,12 +26,45 @@ try:
     HAS_REAL_DB = True
 except ImportError as e:
     print(f"⚠️ Failed to import models: {e}")
-    print("🔄 Using fallback in-memory database")
+    print("📄 Using fallback in-memory database")
     HAS_REAL_DB = False
 
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'change-this-in-production-genwear-2024')
+
+# ============================================================================
+# DEBUG LOGGING HANDLERS - ADDED TO CATCH ERRORS
+# ============================================================================
+
+@app.before_request
+def log_request():
+    """Log all incoming requests"""
+    print(f"🌐 Incoming request: {request.method} {request.path}")
+    logger.info(f"Request: {request.method} {request.path}")
+
+@app.after_request
+def log_response(response):
+    """Log all outgoing responses"""
+    print(f"📤 Response: {response.status_code} for {request.path}")
+    logger.info(f"Response: {response.status_code} for {request.path}")
+    return response
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Catch and log ALL exceptions during request processing"""
+    print(f"❌ FATAL ERROR in {request.path}: {e}")
+    print(f"🔍 Exception type: {type(e).__name__}")
+    print(f"📍 Exception details: {str(e)}")
+    print("🔧 Full traceback:")
+    traceback.print_exc()
+    logger.error(f"Fatal error in {request.path}: {e}", exc_info=True)
+    return jsonify({
+        'error': 'Internal Server Error',
+        'path': request.path,
+        'message': str(e),
+        'type': type(e).__name__
+    }), 500
 
 # Initialize database with fallback
 if HAS_REAL_DB:
@@ -31,7 +73,7 @@ if HAS_REAL_DB:
         print("✅ Database connection established")
     except Exception as e:
         print(f"⚠️ Database initialization failed: {e}")
-        print("🔄 Switching to fallback database")
+        print("📄 Switching to fallback database")
         HAS_REAL_DB = False
 
 # Fallback in-memory database
@@ -582,9 +624,12 @@ def bulk_approve_terms():
 def dashboard():
     """Website-styled admin dashboard with sticky filters and proper functionality"""
     try:
+        print("🏠 Dashboard: Starting to load...")
+        
         # Get ALL trending terms
         trending_terms = db.get_trending_terms(limit=1000)
         total_terms = len(trending_terms)
+        print(f"📊 Dashboard: Retrieved {total_terms} terms")
         
         # Enhanced data processing with comprehensive business intelligence
         for term in trending_terms:
@@ -697,6 +742,8 @@ def dashboard():
             # QR code preview URL
             term['qr_preview_url'] = f"/dictionary#{term['term'].lower()}"
         
+        print("📊 Dashboard: Enhanced data processing complete")
+        
         # Calculate comprehensive metrics
         approved_terms = [term for term in trending_terms if term.get('approval_status') == 'approved']
         pending_terms = [term for term in trending_terms if term.get('approval_status', 'pending') == 'pending']
@@ -709,6 +756,8 @@ def dashboard():
         high_terms = [term for term in trending_terms if 60 <= term['engagement_score'] < 80]
         rising_terms = [term for term in trending_terms if 40 <= term['engagement_score'] < 60]
         low_terms = [term for term in trending_terms if term['engagement_score'] < 40]
+        
+        print(f"📊 Dashboard: Metrics calculated - Hot: {len(hot_terms)}, High: {len(high_terms)}, Rising: {len(rising_terms)}, Low: {len(low_terms)}")
         
         # Website-styled dashboard template
         html = '''
@@ -1924,6 +1973,8 @@ def dashboard():
         </html>
         '''
         
+        print("🎨 Dashboard: Template rendering starting...")
+        
         return render_template_string(html, 
                                     total_terms=total_terms,
                                     pending_terms=pending_terms,
@@ -1938,7 +1989,9 @@ def dashboard():
         
     except Exception as e:
         print(f"❌ Dashboard error: {e}")
-        return f"Dashboard error: {e}", 500
+        print("🔧 Full dashboard traceback:")
+        traceback.print_exc()
+        return f"<h1>Dashboard Error</h1><p>{e}</p><pre>{traceback.format_exc()}</pre>", 500
 
 # ============================================================================
 # SIMPLE DICTIONARY ROUTE
@@ -2027,6 +2080,7 @@ if __name__ == '__main__':
     print(f"   🏥 Health Check: /health")
     
     print(f"\n🎨 Fixed Issues:")
+    print(f"   ✅ Added comprehensive request/response/error logging")
     print(f"   ✅ Added missing @app.route decorator for research function")
     print(f"   ✅ Fixed division by zero error in dashboard")
     print(f"   ✅ Railway port configuration added")
@@ -2034,6 +2088,7 @@ if __name__ == '__main__':
     print(f"   ✅ Safe error handling throughout")
     
     print("\n" + "=" * 60)
+    print("🐛 DEBUG MODE: All requests will be logged in detail")
     print("✅ Ready for Railway deployment!")
     print("=" * 60)
     
