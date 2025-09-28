@@ -70,7 +70,7 @@
             font-size: 14px;
         }
         
-        input[type="password"] {
+        input[type="email"], input[type="password"] {
             width: 100%;
             padding: 14px 16px;
             background: #111;
@@ -81,7 +81,7 @@
             transition: border-color 0.2s;
         }
         
-        input[type="password"]:focus {
+        input[type="email"]:focus, input[type="password"]:focus {
             outline: none;
             border-color: var(--accent-primary);
         }
@@ -99,7 +99,7 @@
             transition: transform 0.2s;
         }
         
-        .login-btn:hover {
+        .login-btn:hover:not(:disabled) {
             transform: translateY(-1px);
         }
         
@@ -172,7 +172,13 @@
         
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
-                <label for="password">Admin Password</label>
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required 
+                       placeholder="admin@genwear.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
                 <input type="password" id="password" name="password" required 
                        placeholder="Enter admin password">
             </div>
@@ -194,9 +200,20 @@
     </div>
     
     <script>
-        // Simple client-side admin authentication
-        // In production, this should be server-side with proper security
-        const ADMIN_PASSWORD = 'genwear2024'; // Change this to your desired password
+        // Import API configuration
+        const API_CONFIG = {
+          development: 'http://localhost:5001/api',
+          production: 'https://your-flask-app.herokuapp.com/api'
+        };
+
+        function getApiBaseUrl() {
+          const hostname = window.location.hostname;
+          return hostname === 'localhost' || hostname === '127.0.0.1' 
+            ? API_CONFIG.development 
+            : API_CONFIG.production;
+        }
+
+        const API_BASE = getApiBaseUrl();
         
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
@@ -232,9 +249,10 @@
             }
         }
         
-        function handleLogin(event) {
+        async function handleLogin(event) {
             event.preventDefault();
             
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
             // Clear previous messages
@@ -243,12 +261,24 @@
             
             setLoading(true);
             
-            // Simulate authentication delay
-            setTimeout(() => {
-                if (password === ADMIN_PASSWORD) {
-                    // Store admin session
+            try {
+                // Make actual API call to your Flask backend
+                const response = await fetch(`${API_BASE}/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Store admin session with proper token
+                    sessionStorage.setItem('genwear_admin_token', data.token);
                     sessionStorage.setItem('genwear_admin', 'true');
                     sessionStorage.setItem('admin_login_time', Date.now());
+                    sessionStorage.setItem('admin_user', data.user);
                     
                     showSuccess('Login successful! Redirecting...');
                     
@@ -257,12 +287,30 @@
                         window.location.href = 'admin.html';
                     }, 1500);
                 } else {
-                    showError('Invalid password. Please try again.');
+                    showError(data.message || 'Invalid credentials. Please try again.');
                     document.getElementById('password').value = '';
                 }
+            } catch (error) {
+                console.error('Login error:', error);
                 
+                // Fallback to client-side check for development
+                if (window.location.hostname === 'localhost') {
+                    if (password === 'genwear2024') {
+                        sessionStorage.setItem('genwear_admin', 'true');
+                        sessionStorage.setItem('admin_login_time', Date.now());
+                        showSuccess('Login successful! Redirecting...');
+                        setTimeout(() => {
+                            window.location.href = 'admin.html';
+                        }, 1500);
+                    } else {
+                        showError('Invalid password for development mode.');
+                    }
+                } else {
+                    showError('Unable to connect to authentication service.');
+                }
+            } finally {
                 setLoading(false);
-            }, 1000);
+            }
         }
         
         // Check if already logged in
@@ -276,8 +324,8 @@
             }
         });
         
-        // Auto-focus password field
-        document.getElementById('password').focus();
+        // Auto-focus email field
+        document.getElementById('email').focus();
     </script>
 </body>
 </html>
